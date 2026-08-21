@@ -26,6 +26,6 @@ public class PriceAlert {
     private BigDecimal targetPrice;
 
     @Column(nullable = false)
-    private Boolean isActive = true;
+    private Boolean active = true;
 
 }

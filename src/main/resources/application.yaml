@@ -7,7 +7,25 @@ spring:
   jpa:
     hibernate:
       ddl-auto: update
-    show-sql: true
+    show-sql: false
     properties:
       hibernate:
-        format_sql: true
+        format_sql: false
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+
+logging:
+  level:
+    org.apache.kafka: WARN
+    org.hibernate.SQL: DEBUG
+
+app:
+  jwt:
+    secret: 404E635266556A586E3272347538782Q423F4428472B4X6290645367566B5970
+    expiration-ms: 10800000
+  server: http://localhost:8080
+  client: http://localhost:4200
