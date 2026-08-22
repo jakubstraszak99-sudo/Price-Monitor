@@ -17,6 +17,17 @@ spring:
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+  mail:
+    host: sandbox.smtp.mailtrap.io
+    port: 2525
+    username: 02400b3988dc9f
+    password: abe6d2f787a614
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
 
 logging:
   level:
@@ -27,5 +38,8 @@ app:
   jwt:
     secret: 404E635266556A586E3272347538782Q423F4428472B4X6290645367566B5970
     expiration-ms: 10800000
-  server: http://localhost:8080
-  client: http://localhost:4200
+  server-url: http://localhost:8080
+  client-url: http://localhost:4200
+  api:
+    verification-path: /api/v1/auth/verify?token=
+    reset-password-path: /api/v1/auth/reset-password?token=

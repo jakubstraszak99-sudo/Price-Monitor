@@ -1,6 +1,6 @@
 package com.github.pricemonitor.service.impl;
 
-import com.github.pricemonitor.event.UserRegisterEvent;
+import com.github.pricemonitor.kafka.event.EmailNotificationEvent;
 import com.github.pricemonitor.exception.PmRuntimeException;
 import com.github.pricemonitor.model.entity.User;
 import com.github.pricemonitor.repository.UserRepository;
@@ -26,7 +26,7 @@ public class AuthServiceImpl implements AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final TokenProvider tokenProvider;
-    private final KafkaTemplate<String, UserRegisterEvent> kafkaTemplate;
+    private final KafkaTemplate<String, EmailNotificationEvent> kafkaTemplate;
 
     @Override
     @Transactional
@@ -41,7 +41,7 @@ public class AuthServiceImpl implements AuthService {
                 .passwordHash(this.passwordEncoder.encode(request.password()))
                 .build());
 
-        final UserRegisterEvent event = new UserRegisterEvent(request.email(), this.tokenProvider.generateVerificationToken(request.email()));
+        final EmailNotificationEvent event = new EmailNotificationEvent(request.email(), this.tokenProvider.generateVerificationToken(request.email()));
         log.debug("Sending user registration event to Kafka: topic={}, email={}", TOPIC, request.email());
 
         this.kafkaTemplate.send(TOPIC, event)

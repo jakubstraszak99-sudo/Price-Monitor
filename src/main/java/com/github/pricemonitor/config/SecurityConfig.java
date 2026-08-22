@@ -20,8 +20,8 @@ import java.util.List;
 @EnableWebSecurity
 public class SecurityConfig {
 
-    @Value("${app.client}")
-    private String client;
+    @Value("${app.client-url}")
+    private String url;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -46,7 +46,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         final CorsConfiguration cors = new CorsConfiguration();
-        cors.setAllowedOriginPatterns(List.of(this.client));
+        cors.setAllowedOriginPatterns(List.of(this.url));
         cors.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         cors.setAllowedHeaders(List.of("*"));
         cors.setAllowCredentials(true);
