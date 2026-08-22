@@ -14,20 +14,23 @@ import java.util.List;
 @Data
 @Builder
 @Entity
-@Table(name = "users")
+@Table(name = "users", indexes = {
+        @Index(name = "idx_users_email", columnList = "email", unique = true),
+        @Index(name = "idx_users_username", columnList = "username", unique = true)
+})
 public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
     private String username;
 
     @Column(name = "password", nullable = false)
     private String passwordHash;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
     private String email;
 
     @Column(nullable = false)

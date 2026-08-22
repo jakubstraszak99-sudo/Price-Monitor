@@ -7,20 +7,25 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 
+import static com.github.pricemonitor.kafka.KafkaTopic.PASSWORD_RESET_TOPIC;
+import static com.github.pricemonitor.kafka.KafkaTopic.REGISTRATION_TOPIC;
+
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class EmailNotificationListener {
 
+    private static final String EMAIL_SENDER_GROUP = "email-sender-group";
+
     private final EmailService emailService;
 
-    @KafkaListener(topics = "user-registration-topic", groupId = "email-sender-group")
+    @KafkaListener(topics = REGISTRATION_TOPIC, groupId = EMAIL_SENDER_GROUP)
     public void handleRegistrationEvent(final EmailNotificationEvent event) {
         log.info("Received user registration event for email: {}", event.email());
         this.emailService.sendVerificationEmail(event.email(), event.token());
     }
 
-    @KafkaListener(topics = "password-reset-topic", groupId = "email-sender-group")
+    @KafkaListener(topics = PASSWORD_RESET_TOPIC, groupId = EMAIL_SENDER_GROUP)
     public void handleResetPasswordEvent(final EmailNotificationEvent event) {
         log.info("Received password reset event for email: {}", event.email());
         this.emailService.sendPasswordResetEmail(event.email(), event.token());

@@ -1,7 +1,8 @@
 package com.github.pricemonitor.service.impl;
 
-import com.github.pricemonitor.kafka.event.EmailNotificationEvent;
 import com.github.pricemonitor.exception.PmRuntimeException;
+import com.github.pricemonitor.kafka.KafkaEventPublisher;
+import com.github.pricemonitor.kafka.event.EmailNotificationEvent;
 import com.github.pricemonitor.model.entity.User;
 import com.github.pricemonitor.repository.UserRepository;
 import com.github.pricemonitor.request.UserRegisterRequest;
@@ -9,31 +10,35 @@ import com.github.pricemonitor.security.TokenProvider;
 import com.github.pricemonitor.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import static com.github.pricemonitor.exception.ExceptionCode.*;
+import static com.github.pricemonitor.kafka.KafkaTopic.REGISTRATION_TOPIC;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
 
-    private static final String TOPIC = "user-registration-topic";
-
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final TokenProvider tokenProvider;
-    private final KafkaTemplate<String, EmailNotificationEvent> kafkaTemplate;
+    private final KafkaEventPublisher eventPublisher;
 
     @Override
     @Transactional
     public void registerUser(final UserRegisterRequest request) {
-        if (this.userRepository.findByEmail(request.email()).isPresent()) {
-            throw new PmRuntimeException(E005);
-        }
+        this.userRepository.findByEmail(request.email()).ifPresent(
+                existingUser -> {
+                    if (existingUser.getVerified()) {
+                        throw new PmRuntimeException(E005);
+                    }
+
+                    this.userRepository.delete(existingUser);
+                    this.userRepository.flush();
+                });
 
         this.userRepository.save(User.builder()
                 .username(request.username())
@@ -42,26 +47,7 @@ public class AuthServiceImpl implements AuthService {
                 .build());
 
         final EmailNotificationEvent event = new EmailNotificationEvent(request.email(), this.tokenProvider.generateVerificationToken(request.email()));
-        log.debug("Sending user registration event to Kafka: topic={}, email={}", TOPIC, request.email());
-
-        this.kafkaTemplate.send(TOPIC, event)
-                .whenComplete((result, exception) -> {
-                    if (exception != null) {
-                        log.error(
-                                "Failed to send user registration event to Kafka: topic={}, email={}",
-                                TOPIC,
-                                request.email(),
-                                exception
-                        );
-                    } else {
-                        log.debug(
-                                "User registration event sent to Kafka: topic={}, partition={}, offset={}",
-                                TOPIC,
-                                result.getRecordMetadata().partition(),
-                                result.getRecordMetadata().offset()
-                        );
-                    }
-                });
+        this.eventPublisher.publishEvent(REGISTRATION_TOPIC, request.email(), event);
     }
 
     @Override
