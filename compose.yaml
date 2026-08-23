@@ -1,6 +1,7 @@
 services:
   postgres:
     image: 'postgres:latest'
+    container_name: postgres
     environment:
       - 'POSTGRES_DB=pricemonitordb'
       - 'POSTGRES_PASSWORD=password'
@@ -10,6 +11,7 @@ services:
 
   kafka:
     image: 'apache/kafka:latest'
+    container_name: kafka
     environment:
       KAFKA_NODE_ID: 1
       KAFKA_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT'
@@ -26,3 +28,10 @@ services:
       KAFKA_LOG_DIRS: '/tmp/kraft-combined-logs'
     ports:
       - '9092:9092'
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"

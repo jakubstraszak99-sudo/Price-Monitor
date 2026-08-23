@@ -10,19 +10,25 @@ import org.hibernate.annotations.CreationTimestamp;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Data
 @Builder
 @Entity
 @Table(name = "users", indexes = {
         @Index(name = "idx_users_email", columnList = "email", unique = true),
-        @Index(name = "idx_users_username", columnList = "username", unique = true)
+        @Index(name = "idx_users_username", columnList = "username", unique = true),
+        @Index(name = "idx_users_public_id", columnList = "public_id", unique = true)
 })
 public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Builder.Default
+    @Column(nullable = false, updatable = false)
+    private UUID publicId = UUID.randomUUID();
 
     @Column(nullable = false)
     private String username;
@@ -33,8 +39,8 @@ public class User {
     @Column(nullable = false)
     private String email;
 
-    @Column(nullable = false)
     @Builder.Default
+    @Column(nullable = false)
     private Boolean verified = false;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
