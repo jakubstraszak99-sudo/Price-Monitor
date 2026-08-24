@@ -4,10 +4,10 @@ import java.math.BigDecimal;
 import java.net.URI;
 import java.time.LocalDateTime;
 
-public record ProductDto (
+public record ProductDto(
         Long id,
         String name,
         URI url,
         BigDecimal currentPrice,
         LocalDateTime lastUpdated
-){}
+) {}

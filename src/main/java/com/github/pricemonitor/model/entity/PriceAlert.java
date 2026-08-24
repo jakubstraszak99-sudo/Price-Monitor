@@ -7,7 +7,9 @@ import java.math.BigDecimal;
 
 @Data
 @Entity
-@Table(name = "price_alerts")
+@Table(name = "price_alerts", uniqueConstraints = {
+        @UniqueConstraint(name = "uk_user_product_alert", columnNames = {"user_id", "product_id"})
+})
 public class PriceAlert {
 
     @Id

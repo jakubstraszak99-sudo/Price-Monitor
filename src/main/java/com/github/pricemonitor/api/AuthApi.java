@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,11 +16,11 @@ public interface AuthApi {
 
     @Operation(description = "Creates a new user account")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "User registered successfully"),
+            @ApiResponse(responseCode = "201", description = "User registered successfully"),
             @ApiResponse(responseCode = "400", description = "Invalid input or email already in use")
     })
     @PostMapping("/register")
-    ResponseEntity<Void> register(@RequestBody final UserRegisterRequest request);
+    ResponseEntity<Void> register(@RequestBody @Valid final UserRegisterRequest request);
 
     @Operation(description = "Verifies the user account using the JWT token sent via email")
     @ApiResponses(value = {

@@ -12,7 +12,9 @@ import java.util.List;
 
 @Data
 @Entity
-@Table(name = "products")
+@Table(name = "products", indexes = {
+        @Index(name = "idx_product_url", columnList = "url", unique = true)
+})
 public class Product {
 
     @Id
@@ -22,7 +24,7 @@ public class Product {
     @Column(nullable = false)
     private String name;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 1000)
     private String url;
 
     @Column(nullable = false)
