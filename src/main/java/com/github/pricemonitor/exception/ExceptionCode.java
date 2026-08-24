@@ -1,11 +1,11 @@
 package com.github.pricemonitor.exception;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 
 @Getter
-@AllArgsConstructor
+@RequiredArgsConstructor
 public enum ExceptionCode {
 
     E001("User not found", HttpStatus.NOT_FOUND),

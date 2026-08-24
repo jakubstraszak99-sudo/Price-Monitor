@@ -1,17 +1,13 @@
 package com.github.pricemonitor.scraper;
 
-import com.github.pricemonitor.exception.PmRuntimeException;
-import com.github.pricemonitor.model.dto.ScrapedProduct;
+import com.github.pricemonitor.config.WebDriverConfig;
+import org.apache.commons.lang3.StringUtils;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
-import java.io.IOException;
-import java.util.Currency;
-import java.util.Objects;
-
-import static com.github.pricemonitor.exception.ExceptionCode.E008;
+import java.util.Optional;
 
 @Order(1)
 @Component
@@ -19,34 +15,31 @@ public class MoreleScraper extends ShopScraper {
 
     private static final String MORELE_DOMAIN = "morele.net";
 
+    public MoreleScraper(final WebDriverConfig webDriverConfig) {
+        super(webDriverConfig);
+    }
+
     @Override
     public boolean supports(final String url) {
         return url != null && url.contains(MORELE_DOMAIN);
     }
 
     @Override
-    public ScrapedProduct scrape(final String url) throws IOException {
-        final Document doc = this.getDocument(url);
-        final Element titleElement = doc.selectFirst("h1.prod-name");
-        final Element imageElement = doc.selectFirst("meta[property=og:image]");
-        final Element priceElement = doc.selectFirst("div#product_price");
-        final String name = titleElement != null ? titleElement.attr("data-default") :
-                (doc.selectFirst("h1") != null ? Objects.requireNonNull(doc.selectFirst("h1")).text() : null);
-        final String imageUrl = imageElement != null ? imageElement.attr("content") : null;
-        String price = priceElement != null ? priceElement.attr("data-price") : null;
+    protected String extractName(final Document doc) {
+        return Optional.ofNullable(doc.selectFirst("h1.prod-name"))
+                .map(element -> element.attr("data-default"))
+                .filter(StringUtils::isNotBlank)
+                .orElseGet(() -> Optional.ofNullable(doc.selectFirst("h1"))
+                        .map(Element::text)
+                        .orElseGet(() -> super.extractName(doc)));
+    }
 
-        if (price == null || price.isBlank()) {
-            final Element fallbackPrice = doc.selectFirst("meta[itemprop=price]");
-            if (fallbackPrice != null) {
-                price = fallbackPrice.attr("content");
-            }
-        }
-
-        if (name == null || price == null) {
-            throw new PmRuntimeException(E008);
-        }
-
-        return new ScrapedProduct(name, this.parsePrice(price), imageUrl, Currency.getInstance("PLN"));
+    @Override
+    protected String extractPrice(final Document doc) {
+        return Optional.ofNullable(doc.selectFirst("div#product_price"))
+                .map(element -> element.attr("data-price"))
+                .filter(StringUtils::isNotBlank)
+                .orElseGet(() -> super.extractPrice(doc));
     }
 
 }
