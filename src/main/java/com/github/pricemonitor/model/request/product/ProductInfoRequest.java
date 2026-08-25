@@ -1,9 +1,10 @@
-package com.github.pricemonitor.request;
+package com.github.pricemonitor.model.request.product;
 
 import jakarta.validation.constraints.NotBlank;
 
-public record ScrapeRequest(
+public record ProductInfoRequest(
 
         @NotBlank
         String url
+
 ) {}

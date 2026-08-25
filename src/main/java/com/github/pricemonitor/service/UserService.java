@@ -1,14 +1,17 @@
 package com.github.pricemonitor.service;
 
-import com.github.pricemonitor.request.ChangePasswordRequest;
-import com.github.pricemonitor.request.ResetPasswordRequest;
+import com.github.pricemonitor.model.entity.UserEntity;
 
 import java.util.UUID;
 
 public interface UserService {
 
-    void resetPassword(final ResetPasswordRequest request);
+    UserEntity getUser(final UUID publicId);
 
-    void changePassword(final UUID userPublicId, final String newPassword);
+    void updatePassword(final UUID userPublicId, final String oldPassword, final String newPassword);
+
+    void forgotPassword(final String email);
+
+    void resetPassword(final String resetToken, final String newPassword);
 
 }

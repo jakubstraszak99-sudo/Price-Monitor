@@ -1,4 +1,4 @@
-package com.github.pricemonitor.request;
+package com.github.pricemonitor.model.request.user;
 
 import jakarta.validation.constraints.NotBlank;
 
@@ -9,4 +9,5 @@ public record UserLoginRequest(
 
         @NotBlank
         String password
+
 ) {}

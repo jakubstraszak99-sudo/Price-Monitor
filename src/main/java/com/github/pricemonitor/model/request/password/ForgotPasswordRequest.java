@@ -1,9 +1,9 @@
-package com.github.pricemonitor.request;
+package com.github.pricemonitor.model.request.password;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 
-public record ResetPasswordRequest(
+public record ForgotPasswordRequest(
 
         @NotBlank
         @Email

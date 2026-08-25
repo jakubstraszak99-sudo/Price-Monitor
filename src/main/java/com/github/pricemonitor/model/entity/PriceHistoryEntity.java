@@ -1,19 +1,21 @@
 package com.github.pricemonitor.model.entity;
 
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.experimental.SuperBuilder;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-@Data
+@Getter
+@Setter
+@SuperBuilder
+@NoArgsConstructor
 @Entity
 @Table(name = "price_history")
-public class PriceHistoryEntity {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+public class PriceHistoryEntity extends BaseEntity {
 
     @Column(nullable = false)
     private BigDecimal recordedPrice;

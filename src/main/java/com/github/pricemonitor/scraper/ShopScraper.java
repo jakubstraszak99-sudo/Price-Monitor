@@ -22,8 +22,8 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-import static com.github.pricemonitor.exception.ExceptionCode.E008;
 import static com.github.pricemonitor.exception.ExceptionCode.E010;
+import static com.github.pricemonitor.exception.ExceptionCode.E012;
 
 @RequiredArgsConstructor(access = AccessLevel.PROTECTED)
 public abstract class ShopScraper {
@@ -40,7 +40,7 @@ public abstract class ShopScraper {
         final Currency currency = this.extractCurrency(doc);
 
         if (StringUtils.isBlank(name) || StringUtils.isBlank(price)) {
-            throw new PmRuntimeException(E008);
+            throw new PmRuntimeException(E010);
         }
 
         return new ScrapedProduct(name, this.parsePrice(price), imageUrl, currency);
@@ -92,7 +92,7 @@ public abstract class ShopScraper {
             return Jsoup.parse(Objects.requireNonNull(pageSource));
 
         } catch (final Exception e) {
-            throw new PmRuntimeException(E010, e);
+            throw new PmRuntimeException(E012, e);
         } finally {
             if (driver != null) {
                 driver.quit();

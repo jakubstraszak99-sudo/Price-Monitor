@@ -3,8 +3,8 @@ package com.github.pricemonitor.api.resource;
 import com.github.pricemonitor.api.AuthApi;
 import com.github.pricemonitor.model.dto.AccessTokenExpiryInfo;
 import com.github.pricemonitor.model.dto.AuthTokenSet;
-import com.github.pricemonitor.request.UserLoginRequest;
-import com.github.pricemonitor.request.UserRegisterRequest;
+import com.github.pricemonitor.model.request.user.UserLoginRequest;
+import com.github.pricemonitor.model.request.user.UserRegisterRequest;
 import com.github.pricemonitor.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
@@ -23,7 +23,7 @@ public class AuthResource implements AuthApi { ;
 
     @Override
     public ResponseEntity<Void> register(final UserRegisterRequest request) {
-        this.authService.registerUser(request);
+        this.authService.registerUser(request.username(), request.email(), request.password());
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
@@ -35,7 +35,7 @@ public class AuthResource implements AuthApi { ;
 
     @Override
     public ResponseEntity<Void> login(final UserLoginRequest request) {
-        final AuthTokenSet authTokenSet = this.authService.login(request);
+        final AuthTokenSet authTokenSet = this.authService.login(request.login(), request.password());
         final ResponseCookie accessCookie = this.buildAccessCookie(authTokenSet.accessToken(), authTokenSet.accessExpirationSeconds());
         final ResponseCookie refreshCookie = this.buildRefreshCookie(authTokenSet.refreshToken(), authTokenSet.refreshExpirationSeconds());
 

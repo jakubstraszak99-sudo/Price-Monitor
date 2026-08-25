@@ -1,7 +1,8 @@
 package com.github.pricemonitor.api;
 
-import com.github.pricemonitor.request.ChangePasswordRequest;
-import com.github.pricemonitor.request.ResetPasswordRequest;
+import com.github.pricemonitor.model.request.password.ResetPasswordRequest;
+import com.github.pricemonitor.model.request.password.UpdatePasswordRequest;
+import com.github.pricemonitor.model.request.password.ForgotPasswordRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -20,19 +21,25 @@ import java.util.UUID;
 @RequestMapping("/api/v1/user")
 public interface UserApi {
 
-    @Operation(summary = "Password reset", description = "Sends a message with a password reset link")
-    @ApiResponse(responseCode = "202", description = "Request received")
-    @PostMapping("/reset-password")
-    ResponseEntity<Void> resetPassword(@RequestBody @Valid final ResetPasswordRequest request);
-
     @Operation(summary = "Password change", description = "Changes user password")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Password successfully changed"),
-            @ApiResponse(responseCode = "400", description = "Password cannot be changed")
+            @ApiResponse(responseCode = "200", description = "Password successfully updated"),
+            @ApiResponse(responseCode = "400", description = "Old password does not match"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized")
     })
-    @PatchMapping("/change-password")
-    ResponseEntity<Void> changePassword(
-            @RequestBody @Valid final ChangePasswordRequest request,
+    @PatchMapping("/password")
+    ResponseEntity<Void> updatePassword(
+            @RequestBody @Valid final UpdatePasswordRequest request,
             @AuthenticationPrincipal final UUID userPublicId);
+
+    @Operation(summary = "Forgot password", description = "Sends a message with a password reset link")
+    @ApiResponse(responseCode = "202", description = "Request received")
+    @PostMapping("/password/forgot")
+    ResponseEntity<Void> forgotPassword(@RequestBody @Valid final ForgotPasswordRequest request);
+
+    @Operation(summary = "Password reset", description = "Resets forgotten password")
+    @ApiResponse(responseCode = "200", description = "Password has been reset")
+    @PatchMapping("/password/reset")
+    ResponseEntity<Void> resetPassword(@RequestBody @Valid final ResetPasswordRequest request);
 
 }

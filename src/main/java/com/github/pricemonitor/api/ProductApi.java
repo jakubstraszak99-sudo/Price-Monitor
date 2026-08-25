@@ -1,7 +1,7 @@
 package com.github.pricemonitor.api;
 
 import com.github.pricemonitor.model.dto.ScrapedProduct;
-import com.github.pricemonitor.request.ScrapeRequest;
+import com.github.pricemonitor.model.request.product.ProductInfoRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -15,9 +15,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 
-@Tag(name = "Scraper")
-@RequestMapping("/api/v1/scraper")
-public interface ScraperApi {
+@Tag(name = "Product")
+@RequestMapping("/api/v1/product")
+public interface ProductApi {
 
     @Operation(summary = "Product scraping", description = "Extracts product info")
     @ApiResponses(value = {
@@ -45,7 +45,7 @@ public interface ScraperApi {
                     content = @Content(schema = @Schema())
             )
     })
-    @PostMapping
-    ResponseEntity<ScrapedProduct> extractProductInfo(@RequestBody @Valid final ScrapeRequest request);
+    @PostMapping("/info/preview")
+    ResponseEntity<ScrapedProduct> extractProductInfo(@RequestBody @Valid final ProductInfoRequest request);
 
 }

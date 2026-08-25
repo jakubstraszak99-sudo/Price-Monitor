@@ -8,10 +8,10 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring")
 public interface PriceHistoryMapper {
 
-    @Mapping(source = "product.id", target = "productId")
     PriceHistory map(final PriceHistoryEntity entity);
 
-    @Mapping(source = "productId", target = "product.id")
+    @Mapping(target = "product", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
     PriceHistoryEntity map(final PriceHistory history);
 
 }

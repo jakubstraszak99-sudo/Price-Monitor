@@ -1,6 +1,6 @@
 package com.github.pricemonitor.kafka.listener;
 
-import com.github.pricemonitor.kafka.event.EmailNotificationEvent;
+import com.github.pricemonitor.kafka.message.EmailNotificationMessage;
 import com.github.pricemonitor.service.EmailService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,15 +17,15 @@ public class EmailNotificationListener {
     private final EmailService emailService;
 
     @KafkaListener(topics = REGISTRATION_TOPIC, containerFactory = "emailKafkaListenerContainerFactory")
-    public void handleRegistrationEvent(final EmailNotificationEvent event) {
-        log.info("Received user registration event for email: {}", event.email());
-        this.emailService.sendVerificationEmail(event.email(), event.token());
+    public void handleRegistrationEvent(final EmailNotificationMessage message) {
+        log.info("Received user registration event for email: {}", message.email());
+        this.emailService.sendVerificationEmail(message.email(), message.token());
     }
 
     @KafkaListener(topics = PASSWORD_RESET_TOPIC, containerFactory = "emailKafkaListenerContainerFactory")
-    public void handleResetPasswordEvent(final EmailNotificationEvent event) {
-        log.info("Received password reset event for email: {}", event.email());
-        this.emailService.sendPasswordResetEmail(event.email(), event.token());
+    public void handleResetPasswordEvent(final EmailNotificationMessage message) {
+        log.info("Received password reset event for email: {}", message.email());
+        this.emailService.sendPasswordResetEmail(message.email(), message.token());
     }
 
 }

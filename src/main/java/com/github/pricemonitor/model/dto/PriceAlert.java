@@ -6,6 +6,5 @@ public record PriceAlert(
         Long id,
         BigDecimal targetPrice,
         Boolean active,
-        Long userId,
         Long productId
 ) {}

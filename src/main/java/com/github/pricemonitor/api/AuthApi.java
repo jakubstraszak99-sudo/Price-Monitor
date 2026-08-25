@@ -1,7 +1,7 @@
 package com.github.pricemonitor.api;
 
-import com.github.pricemonitor.request.UserLoginRequest;
-import com.github.pricemonitor.request.UserRegisterRequest;
+import com.github.pricemonitor.model.request.user.UserLoginRequest;
+import com.github.pricemonitor.model.request.user.UserRegisterRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.headers.Header;

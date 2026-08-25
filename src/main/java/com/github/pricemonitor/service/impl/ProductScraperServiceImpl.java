@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
-import static com.github.pricemonitor.exception.ExceptionCode.E009;
+import static com.github.pricemonitor.exception.ExceptionCode.E011;
 
 @Service
 @RequiredArgsConstructor
@@ -23,7 +23,7 @@ public class ProductScraperServiceImpl implements ProductScraperService {
                 .filter(scraper -> scraper.supports(url))
                 .findFirst()
                 .map(scraper -> scraper.scrape(url))
-                .orElseThrow(() -> new PmRuntimeException(E009));
+                .orElseThrow(() -> new PmRuntimeException(E011));
     }
 
 }

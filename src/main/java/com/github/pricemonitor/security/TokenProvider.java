@@ -15,8 +15,8 @@ import javax.crypto.SecretKey;
 import java.util.Date;
 import java.util.UUID;
 
-import static com.github.pricemonitor.exception.ExceptionCode.E003;
-import static com.github.pricemonitor.exception.ExceptionCode.E004;
+import static com.github.pricemonitor.exception.ExceptionCode.E005;
+import static com.github.pricemonitor.exception.ExceptionCode.E006;
 
 @Component
 public class TokenProvider {
@@ -62,9 +62,9 @@ public class TokenProvider {
                     .getPayload();
             return UUID.fromString(claims.getSubject());
         } catch (final ExpiredJwtException e) {
-            throw new PmRuntimeException(E003, e);
+            throw new PmRuntimeException(E005, e);
         } catch (final SignatureException e) {
-            throw new PmRuntimeException(E004, e);
+            throw new PmRuntimeException(E006, e);
         }
     }
 

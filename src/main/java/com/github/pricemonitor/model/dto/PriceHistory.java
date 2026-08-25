@@ -6,6 +6,5 @@ import java.time.LocalDateTime;
 public record PriceHistory(
         Long id,
         BigDecimal recordedPrice,
-        LocalDateTime timestamp,
-        Long productId
+        LocalDateTime timestamp
 ) {}

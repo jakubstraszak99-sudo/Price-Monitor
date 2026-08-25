@@ -2,15 +2,13 @@ package com.github.pricemonitor.service.impl;
 
 import com.github.pricemonitor.exception.PmRuntimeException;
 import com.github.pricemonitor.kafka.KafkaEventPublisher;
-import com.github.pricemonitor.kafka.event.EmailNotificationEvent;
+import com.github.pricemonitor.kafka.message.EmailNotificationMessage;
 import com.github.pricemonitor.model.dto.AccessTokenExpiryInfo;
+import com.github.pricemonitor.model.dto.AuthTokenSet;
 import com.github.pricemonitor.model.entity.UserEntity;
 import com.github.pricemonitor.redis.RefreshToken;
 import com.github.pricemonitor.redis.RefreshTokenRedisRepository;
 import com.github.pricemonitor.repository.UserRepository;
-import com.github.pricemonitor.request.UserLoginRequest;
-import com.github.pricemonitor.request.UserRegisterRequest;
-import com.github.pricemonitor.model.dto.AuthTokenSet;
 import com.github.pricemonitor.security.TokenProvider;
 import com.github.pricemonitor.service.AuthService;
 import lombok.RequiredArgsConstructor;
@@ -37,11 +35,11 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     @Transactional
-    public void registerUser(final UserRegisterRequest request) {
-        this.userRepository.findByEmail(request.email()).ifPresent(
+    public void registerUser(final String username, final String email, final String password) {
+        this.userRepository.findByEmail(email).ifPresent(
                 existingUser -> {
                     if (existingUser.getVerified()) {
-                        throw new PmRuntimeException(E005);
+                        throw new PmRuntimeException(E007);
                     }
 
                     this.userRepository.delete(existingUser);
@@ -49,15 +47,15 @@ public class AuthServiceImpl implements AuthService {
                 });
 
         final UserEntity user = UserEntity.builder()
-                .username(request.username())
-                .email(request.email())
-                .passwordHash(this.passwordEncoder.encode(request.password()))
+                .username(username)
+                .email(email)
+                .passwordHash(this.passwordEncoder.encode(password))
                 .build();
 
         this.userRepository.save(user);
 
-        final EmailNotificationEvent event = new EmailNotificationEvent(request.email(), this.tokenProvider.generateVerificationToken(user.getPublicId()));
-        this.eventPublisher.publishEvent(REGISTRATION_TOPIC, request.email(), event);
+        final EmailNotificationMessage message = new EmailNotificationMessage(email, this.tokenProvider.generateVerificationToken(user.getPublicId()));
+        this.eventPublisher.publish(REGISTRATION_TOPIC, email, message);
     }
 
     @Override
@@ -77,13 +75,13 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     @Transactional(readOnly = true)
-    public AuthTokenSet login(final UserLoginRequest request) {
+    public AuthTokenSet login(final String login, final String password) {
         final UserEntity user = this.userRepository
-                .findByUsernameOrEmail(request.login(), request.login())
-                .orElseThrow(() -> new PmRuntimeException(E006));
+                .findByUsernameOrEmail(login, login)
+                .orElseThrow(() -> new PmRuntimeException(E008));
 
-        if (!this.passwordEncoder.matches(request.password(), user.getPasswordHash()) || !user.getVerified()) {
-            throw new PmRuntimeException(E006);
+        if (!this.passwordEncoder.matches(password, user.getPasswordHash()) || !user.getVerified()) {
+            throw new PmRuntimeException(E008);
         }
 
         final String accessToken = this.tokenProvider.generateAccessToken(user.getPublicId());
@@ -97,7 +95,7 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public AccessTokenExpiryInfo refreshToken(final String refreshTokenValue) {
         final RefreshToken refreshToken = this.redisRepository.findById(refreshTokenValue)
-                .orElseThrow(() -> new PmRuntimeException(E007));
+                .orElseThrow(() -> new PmRuntimeException(E009));
         final String accessToken = this.tokenProvider.generateAccessToken(refreshToken.getUserPublicId());
         final long accessExpirationSeconds = this.tokenProvider.getAccessExpirationInSeconds();
 
