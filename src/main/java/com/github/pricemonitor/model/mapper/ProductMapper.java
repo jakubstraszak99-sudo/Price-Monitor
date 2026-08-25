@@ -1,7 +1,7 @@
 package com.github.pricemonitor.model.mapper;
 
-import com.github.pricemonitor.model.dto.ProductDto;
-import com.github.pricemonitor.model.entity.Product;
+import com.github.pricemonitor.model.dto.Product;
+import com.github.pricemonitor.model.entity.ProductEntity;
 import org.mapstruct.Mapper;
 
 import java.net.URI;
@@ -9,24 +9,16 @@ import java.net.URI;
 @Mapper(componentModel = "spring")
 public interface ProductMapper {
 
-    ProductDto toDto(final Product product);
+    Product map(final ProductEntity entity);
 
-    Product toEntity(final ProductDto productDto);
+    ProductEntity map(final Product product);
 
-    default URI mapStringToUri(final String url) {
-        if (url == null) {
-            return null;
-        }
-
-        return URI.create(url);
+    default URI mapStringToUri(final String str) {
+        return str != null ? URI.create(str) : null;
     }
 
     default String mapUriToString(final URI uri) {
-        if (uri == null) {
-            return null;
-        }
-
-        return uri.toString();
+        return uri != null ? uri.toString() : null;
     }
 
 }

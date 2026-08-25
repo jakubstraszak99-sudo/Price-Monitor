@@ -3,14 +3,14 @@ package com.github.pricemonitor.service.impl;
 import com.github.pricemonitor.exception.PmRuntimeException;
 import com.github.pricemonitor.kafka.KafkaEventPublisher;
 import com.github.pricemonitor.kafka.event.EmailNotificationEvent;
-import com.github.pricemonitor.model.entity.User;
+import com.github.pricemonitor.model.dto.AccessTokenExpiryInfo;
+import com.github.pricemonitor.model.entity.UserEntity;
 import com.github.pricemonitor.redis.RefreshToken;
 import com.github.pricemonitor.redis.RefreshTokenRedisRepository;
 import com.github.pricemonitor.repository.UserRepository;
-import com.github.pricemonitor.request.TokenRefreshRequest;
 import com.github.pricemonitor.request.UserLoginRequest;
 import com.github.pricemonitor.request.UserRegisterRequest;
-import com.github.pricemonitor.response.AuthResponse;
+import com.github.pricemonitor.model.dto.AuthTokenSet;
 import com.github.pricemonitor.security.TokenProvider;
 import com.github.pricemonitor.service.AuthService;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.UUID;
 
 import static com.github.pricemonitor.exception.ExceptionCode.*;
-import static com.github.pricemonitor.kafka.KafkaTopic.REGISTRATION_TOPIC;
+import static com.github.pricemonitor.utils.KafkaUtil.REGISTRATION_TOPIC;
 
 @Slf4j
 @Service
@@ -48,7 +48,7 @@ public class AuthServiceImpl implements AuthService {
                     this.userRepository.flush();
                 });
 
-        final User user = User.builder()
+        final UserEntity user = UserEntity.builder()
                 .username(request.username())
                 .email(request.email())
                 .passwordHash(this.passwordEncoder.encode(request.password()))
@@ -64,7 +64,7 @@ public class AuthServiceImpl implements AuthService {
     @Transactional
     public void verifyAccount(final String token) {
         final UUID publicId = this.tokenProvider.extractUserPublicId(token);
-        final User user = this.userRepository.findByPublicId(publicId)
+        final UserEntity user = this.userRepository.findByPublicId(publicId)
                 .orElseThrow(() -> new PmRuntimeException(E001));
 
         if (user.getVerified()) {
@@ -77,8 +77,8 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     @Transactional(readOnly = true)
-    public AuthResponse login(final UserLoginRequest request) {
-        final User user = this.userRepository
+    public AuthTokenSet login(final UserLoginRequest request) {
+        final UserEntity user = this.userRepository
                 .findByUsernameOrEmail(request.login(), request.login())
                 .orElseThrow(() -> new PmRuntimeException(E006));
 
@@ -91,16 +91,17 @@ public class AuthServiceImpl implements AuthService {
 
         this.redisRepository.save(refreshToken);
 
-        return new AuthResponse(accessToken, refreshToken.getToken());
+        return new AuthTokenSet(accessToken, refreshToken.getTokenId(), this.tokenProvider.getAccessExpirationInSeconds(), refreshToken.getExpirationInSeconds());
     }
 
     @Override
-    public AuthResponse refreshToken(final TokenRefreshRequest request) {
-        final RefreshToken refreshToken = this.redisRepository.findById(request.refreshToken())
+    public AccessTokenExpiryInfo refreshToken(final String refreshTokenValue) {
+        final RefreshToken refreshToken = this.redisRepository.findById(refreshTokenValue)
                 .orElseThrow(() -> new PmRuntimeException(E007));
+        final String accessToken = this.tokenProvider.generateAccessToken(refreshToken.getUserPublicId());
+        final long accessExpirationSeconds = this.tokenProvider.getAccessExpirationInSeconds();
 
-        final String newAccessToken = this.tokenProvider.generateAccessToken(refreshToken.getUserPublicId());
-        return new AuthResponse(newAccessToken, refreshToken.getToken());
+        return new AccessTokenExpiryInfo(accessToken, accessExpirationSeconds);
     }
 
 }

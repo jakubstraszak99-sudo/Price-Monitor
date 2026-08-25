@@ -11,7 +11,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -20,7 +19,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @RequestMapping("/api/v1/scraper")
 public interface ScraperApi {
 
-    @Operation(description = "Extracts product info")
+    @Operation(summary = "Product scraping", description = "Extracts product info")
     @ApiResponses(value = {
             @ApiResponse(
                     responseCode = "200",

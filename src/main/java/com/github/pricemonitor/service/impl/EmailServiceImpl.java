@@ -10,6 +10,9 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
+import static com.github.pricemonitor.utils.AuthenticationUtil.PASSWORD_RESET_PATH;
+import static com.github.pricemonitor.utils.AuthenticationUtil.VERIFICATION_TOKEN_PATH;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -55,18 +58,15 @@ public class EmailServiceImpl implements EmailService {
 
     private final JavaMailSender mailSender;
 
+    @Value("${app.mail.from}")
+    private String from;
+
     @Value("${app.server-url}")
     private String url;
 
-    @Value("${app.api.verification-path}")
-    private String verificationPath;
-
-    @Value("${app.api.reset-password-path}")
-    private String resetPasswordPath;
-
     @Override
     public void sendVerificationEmail(final String to, final String token) {
-        final String htmlContent = VERIFICATION_TEMPLATE.formatted(this.buildLink(this.verificationPath, token));
+        final String htmlContent = VERIFICATION_TEMPLATE.formatted(this.buildLink(VERIFICATION_TOKEN_PATH, token));
         this.sendEmail(to, VERIFICATION_SUBJECT, htmlContent);
         log.info("Verification email sent to: {}", to);
     }
@@ -74,7 +74,7 @@ public class EmailServiceImpl implements EmailService {
 
     @Override
     public void sendPasswordResetEmail(final String to, final String token) {
-        final String htmlContent = PASSWORD_RESET_TEMPLATE.formatted(this.buildLink(this.resetPasswordPath, token));
+        final String htmlContent = PASSWORD_RESET_TEMPLATE.formatted(this.buildLink(PASSWORD_RESET_PATH, token));
         this.sendEmail(to, PASSWORD_RESET_SUBJECT, htmlContent);
         log.info("Password reset email sent to: {}", to);
     }
@@ -83,6 +83,7 @@ public class EmailServiceImpl implements EmailService {
         try {
             final MimeMessage mimeMessage = this.mailSender.createMimeMessage();
             final MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, "utf-8");
+            helper.setFrom(this.from);
             helper.setTo(to);
             helper.setSubject(subject);
             helper.setText(htmlContent, true);

@@ -15,6 +15,7 @@ import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
 import java.math.BigDecimal;
+import java.net.URI;
 import java.time.Duration;
 import java.util.Currency;
 import java.util.Objects;
@@ -35,7 +36,7 @@ public abstract class ShopScraper {
         final Document doc = this.getDocument(url);
         final String name = this.extractName(doc);
         final String price = this.extractPrice(doc);
-        final String imageUrl = this.extractImage(doc);
+        final URI imageUrl = this.extractImage(doc);
         final Currency currency = this.extractCurrency(doc);
 
         if (StringUtils.isBlank(name) || StringUtils.isBlank(price)) {
@@ -65,10 +66,11 @@ public abstract class ShopScraper {
                 .orElse(null);
     }
 
-    protected String extractImage(final Document doc) {
+    protected URI extractImage(final Document doc) {
         return Optional.ofNullable(doc.selectFirst("meta[property=og:image]"))
                 .map(element -> element.attr("content"))
                 .filter(StringUtils::isNotBlank)
+                .map(URI::create)
                 .orElse(null);
     }
 

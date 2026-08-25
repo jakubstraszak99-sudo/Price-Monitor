@@ -1,14 +1,14 @@
 package com.github.pricemonitor.model.mapper;
 
-import com.github.pricemonitor.model.dto.UserDto;
-import com.github.pricemonitor.model.entity.User;
+import com.github.pricemonitor.model.dto.User;
+import com.github.pricemonitor.model.entity.UserEntity;
 import org.mapstruct.Mapper;
 
 @Mapper(componentModel = "spring")
 public interface UserMapper {
 
-    UserDto toDto(final User user);
+    User map(final UserEntity entity);
 
-    User toEntity(final UserDto userDto);
+    UserEntity map(final User user);
 
 }

@@ -31,8 +31,7 @@ public class TokenProvider {
             @Value("${app.jwt.verification-expiration-ms}") final long verificationExpirationMs,
             @Value("${app.jwt.access-expiration-ms}") final long accessExpirationMs,
             @Value("${app.jwt.refresh-expiration-ms}") final long refreshExpirationMs) {
-        byte[] keyBytes = Decoders.BASE64.decode(secret);
-        this.key = Keys.hmacShaKeyFor(keyBytes);
+        this.key = Keys.hmacShaKeyFor(Decoders.BASE64.decode(secret));
         this.verificationExpirationMs = verificationExpirationMs;
         this.accessExpirationMs = accessExpirationMs;
         this.refreshExpirationMs = refreshExpirationMs;
@@ -48,7 +47,7 @@ public class TokenProvider {
 
     public RefreshToken generateRefreshToken(final UUID userPublicId) {
         return RefreshToken.builder()
-                .token(UUID.randomUUID().toString())
+                .tokenId(UUID.randomUUID().toString())
                 .userPublicId(userPublicId)
                 .expirationInSeconds(this.refreshExpirationMs / 1000)
                 .build();
@@ -67,6 +66,10 @@ public class TokenProvider {
         } catch (final SignatureException e) {
             throw new PmRuntimeException(E004, e);
         }
+    }
+
+    public long getAccessExpirationInSeconds() {
+        return this.accessExpirationMs / 1000;
     }
 
     private String buildToken(final UUID userPublicId, final long expirationTimeMs) {

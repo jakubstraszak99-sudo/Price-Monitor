@@ -21,14 +21,15 @@ spring:
     host: localhost
     port: 6379
   mail:
-    host: sandbox.smtp.mailtrap.io
-    port: 2525
-    username: 02400b3988dc9f
-    password: abe6d2f787a614
+    host: smtp.gmail.com
+    port: 587
+    username: quizgame9999@gmail.com
+    password: lgtflzsfawybqopw
+    protocol: smtp
+    auth: true
     properties:
       mail:
         smtp:
-          auth: true
           starttls:
             enable: true
 
@@ -38,6 +39,8 @@ logging:
     org.hibernate.SQL: DEBUG
 
 app:
+  mail:
+    from: "Price Monitor <quizgame9999@gmail.com>"
   jwt:
     secret: 404E635266556A586E3272347538782Q423F4428472B4X6290645367566B5970
     verification-expiration-ms: 10800000
@@ -45,6 +48,3 @@ app:
     refresh-expiration-ms: 2592000000
   server-url: http://localhost:8080
   client-url: http://localhost:4200
-  api:
-    verification-path: /api/v1/auth/verify?token=
-    reset-password-path: /api/v1/auth/reset-password?token=

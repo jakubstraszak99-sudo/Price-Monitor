@@ -1,9 +1,9 @@
 package com.github.pricemonitor.service;
 
-import com.github.pricemonitor.request.TokenRefreshRequest;
+import com.github.pricemonitor.model.dto.AccessTokenExpiryInfo;
 import com.github.pricemonitor.request.UserLoginRequest;
 import com.github.pricemonitor.request.UserRegisterRequest;
-import com.github.pricemonitor.response.AuthResponse;
+import com.github.pricemonitor.model.dto.AuthTokenSet;
 
 public interface AuthService {
 
@@ -11,8 +11,8 @@ public interface AuthService {
 
     void verifyAccount(final String token);
 
-    AuthResponse login(final UserLoginRequest request);
+    AuthTokenSet login(final UserLoginRequest request);
 
-    AuthResponse refreshToken(final TokenRefreshRequest request);
+    AccessTokenExpiryInfo refreshToken(final String refreshTokenValue);
 
 }

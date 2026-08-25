@@ -10,7 +10,7 @@ import java.math.BigDecimal;
 @Table(name = "price_alerts", uniqueConstraints = {
         @UniqueConstraint(name = "uk_user_product_alert", columnNames = {"user_id", "product_id"})
 })
-public class PriceAlert {
+public class PriceAlertEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -18,11 +18,11 @@ public class PriceAlert {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    private UserEntity user;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "product_id", nullable = false)
-    private Product product;
+    private ProductEntity product;
 
     @Column(nullable = false)
     private BigDecimal targetPrice;

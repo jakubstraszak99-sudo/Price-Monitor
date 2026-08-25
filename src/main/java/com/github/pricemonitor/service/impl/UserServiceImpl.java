@@ -3,9 +3,8 @@ package com.github.pricemonitor.service.impl;
 import com.github.pricemonitor.exception.PmRuntimeException;
 import com.github.pricemonitor.kafka.KafkaEventPublisher;
 import com.github.pricemonitor.kafka.event.EmailNotificationEvent;
-import com.github.pricemonitor.model.entity.User;
+import com.github.pricemonitor.model.entity.UserEntity;
 import com.github.pricemonitor.repository.UserRepository;
-import com.github.pricemonitor.request.ChangePasswordRequest;
 import com.github.pricemonitor.request.ResetPasswordRequest;
 import com.github.pricemonitor.security.TokenProvider;
 import com.github.pricemonitor.service.UserService;
@@ -15,8 +14,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.UUID;
+
 import static com.github.pricemonitor.exception.ExceptionCode.E001;
-import static com.github.pricemonitor.kafka.KafkaTopic.PASSWORD_RESET_TOPIC;
+import static com.github.pricemonitor.utils.KafkaUtil.PASSWORD_RESET_TOPIC;
 
 @Slf4j
 @Service
@@ -42,11 +43,11 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public void changePassword(final ChangePasswordRequest request) {
-        final User user = this.userRepository.findByPublicId(this.tokenProvider.extractUserPublicId(request.accessToken()))
+    public void changePassword(final UUID userPublicId, final String newPassword) {
+        final UserEntity user = this.userRepository.findByPublicId(userPublicId)
                 .orElseThrow(() -> new PmRuntimeException(E001));
 
-        user.setPasswordHash(this.passwordEncoder.encode(request.password()));
+        user.setPasswordHash(this.passwordEncoder.encode(newPassword));
         this.userRepository.save(user);
     }
 

@@ -20,7 +20,7 @@ import java.util.UUID;
         @Index(name = "idx_users_username", columnList = "username", unique = true),
         @Index(name = "idx_users_public_id", columnList = "public_id", unique = true)
 })
-public class User {
+public class UserEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -47,7 +47,7 @@ public class User {
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
     @Builder.Default
-    private List<PriceAlert> priceAlerts = new ArrayList<>();
+    private List<PriceAlertEntity> priceAlerts = new ArrayList<>();
 
     @Column(name = "_created", nullable = false, updatable = false)
     @CreationTimestamp

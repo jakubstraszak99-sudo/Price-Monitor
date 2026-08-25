@@ -8,8 +8,8 @@ import org.springframework.http.HttpStatus;
 @RequiredArgsConstructor
 public enum ExceptionCode {
 
-    E001("User not found", HttpStatus.NOT_FOUND),
-    E002("User is already verified", HttpStatus.BAD_REQUEST),
+    E001("UserEntity not found", HttpStatus.NOT_FOUND),
+    E002("UserEntity is already verified", HttpStatus.BAD_REQUEST),
     E003("JWT token date expired", HttpStatus.UNAUTHORIZED),
     E004("JWT token is invalid", HttpStatus.UNAUTHORIZED),
     E005("Email address already exists", HttpStatus.CONFLICT),

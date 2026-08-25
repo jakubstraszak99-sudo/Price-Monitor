@@ -9,6 +9,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.UUID;
+
 @RestController
 @RequiredArgsConstructor
 public class UserResource implements UserApi {
@@ -22,8 +24,8 @@ public class UserResource implements UserApi {
     }
 
     @Override
-    public ResponseEntity<Void> changePassword(final ChangePasswordRequest request) {
-        this.userService.changePassword(request);
+    public ResponseEntity<Void> changePassword(final ChangePasswordRequest request, final UUID userPublicId) {
+        this.userService.changePassword(userPublicId, request.password());
         return ResponseEntity.status(HttpStatus.OK).build();
     }
 
