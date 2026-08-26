@@ -9,6 +9,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Optional;
+
 @Service
 @RequiredArgsConstructor
 public class ProductServiceImpl implements ProductService {
@@ -17,10 +19,15 @@ public class ProductServiceImpl implements ProductService {
     private final ProductMapper productMapper;
 
     @Override
+    @Transactional(readOnly = true)
+    public Optional<ProductEntity> findProduct(final String url) {
+        return this.productRepository.findByProductUrl(url);
+    }
+
+    @Override
     @Transactional
     public ProductEntity getOrCreateProduct(final String url, final ScrapedProduct data) {
-        return this.productRepository.findByProductUrl(url)
-                .orElseGet(() -> this.createProduct(url, data));
+        return this.findProduct(url).orElseGet(() -> this.createProduct(url, data));
     }
 
     private ProductEntity createProduct(final String url, final ScrapedProduct data) {

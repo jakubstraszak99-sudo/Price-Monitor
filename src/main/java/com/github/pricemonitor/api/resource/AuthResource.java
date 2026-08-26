@@ -17,7 +17,7 @@ import static com.github.pricemonitor.utils.AuthenticationUtil.*;
 
 @RestController
 @RequiredArgsConstructor
-public class AuthResource implements AuthApi { ;
+public class AuthResource implements AuthApi {
 
     private final AuthService authService;
 

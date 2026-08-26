@@ -27,6 +27,9 @@ public interface ProductMapper {
     @Mapping(target = "createdAt", ignore = true)
     ProductEntity map(final ScrapedProduct data, final String url);
 
+    @Mapping(target = "price", source = "currentPrice")
+    ScrapedProduct mapToScrapedProduct(final ProductEntity entity);
+
     default URI mapStringToUri(final String str) {
         return str != null ? URI.create(str) : null;
     }
