@@ -25,7 +25,9 @@ public class SteamScraper extends ShopScraper {
             "zł", "PLN",
             "€", "EUR",
             "$", "USD",
-            "£", "GBP"
+            "£", "GBP",
+            "CHF", "CHF",
+            "SEK", "SEK"
     );
 
     public SteamScraper(final WebDriverConfig webDriverConfig) {

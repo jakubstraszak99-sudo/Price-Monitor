@@ -32,7 +32,6 @@ public class GunfireScraper extends ShopScraper {
                     return StringUtils.isNotBlank(dataPrice) ? dataPrice : element.text();
                 })
                 .filter(StringUtils::isNotBlank)
-                .map(raw -> raw.replaceAll("[^0-9.,]", "").replace(",", "."))
                 .orElse(null);
 
         if (price != null) {
@@ -42,7 +41,6 @@ public class GunfireScraper extends ShopScraper {
         return Optional.ofNullable(doc.selectFirst("span.projector_price_srp"))
                 .map(Element::text)
                 .filter(StringUtils::isNotBlank)
-                .map(raw -> raw.replaceAll("[^0-9.,]", "").replace(",", "."))
                 .orElseGet(() -> super.extractPrice(doc));
     }
 

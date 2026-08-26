@@ -19,13 +19,18 @@ class UserServiceSpec extends Specification {
     def passwordEncoder = Mock(PasswordEncoder)
 
     @Subject
-    def service = new UserServiceImpl(this.userRepository, this.tokenProvider, this.eventPublisher, this.passwordEncoder)
+    def service = new UserServiceImpl(
+            this.userRepository,
+            this.tokenProvider,
+            this.eventPublisher,
+            this.passwordEncoder
+    )
 
     def userId = UUID.randomUUID()
     def userEmail = "test@example.com"
     def oldHash = "old_encoded_password"
 
-    def "Should return user entity when valid publicId is provided"() {
+    def "Should return user when valid publicId is provided"() {
         given:
             def user = new UserEntity(publicId: this.userId, email: this.userEmail)
             this.userRepository.findByPublicId(this.userId) >> Optional.of(user)
