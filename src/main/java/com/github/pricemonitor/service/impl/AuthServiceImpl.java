@@ -93,6 +93,13 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
+    public void logout(final String refreshTokenValue) {
+        if (refreshTokenValue != null) {
+            this.redisRepository.deleteById(refreshTokenValue);
+        }
+    }
+
+    @Override
     public AccessTokenExpiryInfo refreshToken(final String refreshTokenValue) {
         final RefreshToken refreshToken = this.redisRepository.findById(refreshTokenValue)
                 .orElseThrow(() -> new PmRuntimeException(E009));

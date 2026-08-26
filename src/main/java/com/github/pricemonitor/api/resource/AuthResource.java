@@ -46,6 +46,19 @@ public class AuthResource implements AuthApi {
     }
 
     @Override
+    public ResponseEntity<Void> logout(final String refreshToken) {
+        this.authService.logout(refreshToken);
+
+        final ResponseCookie clearAccessCookie = this.buildCookie(ACCESS_TOKEN_COOKIE, "", ACCESS_TOKEN_PATH, 0);
+        final ResponseCookie clearRefreshCookie = this.buildCookie(REFRESH_TOKEN_COOKIE, "", REFRESH_TOKEN_PATH, 0);
+
+        return ResponseEntity.noContent()
+                .header(HttpHeaders.SET_COOKIE, clearAccessCookie.toString())
+                .header(HttpHeaders.SET_COOKIE, clearRefreshCookie.toString())
+                .build();
+    }
+
+    @Override
     public ResponseEntity<Void> refreshToken(final String refreshToken) {
         final AccessTokenExpiryInfo accessTokenExpiryInfo = this.authService.refreshToken(refreshToken);
         final ResponseCookie accessCookie = this.buildAccessCookie(accessTokenExpiryInfo.accessToken(), accessTokenExpiryInfo.accessExpirationSeconds());

@@ -49,6 +49,11 @@ public interface AuthApi {
     @PostMapping("/login")
     ResponseEntity<Void> login(@RequestBody @Valid final UserLoginRequest request);
 
+    @Operation(summary = "Logout user", description = "Invalidates session and clears cookies")
+    @ApiResponse(responseCode = "204", description = "Logged out successfully")
+    @PostMapping("/logout")
+    ResponseEntity<Void> logout(@Parameter(hidden = true) @CookieValue(name = REFRESH_TOKEN_COOKIE, required = false) final String refreshToken);
+
     @Operation(summary = "Refresh access token", description = "Generate a new access token")
     @ApiResponses(value = {
             @ApiResponse(

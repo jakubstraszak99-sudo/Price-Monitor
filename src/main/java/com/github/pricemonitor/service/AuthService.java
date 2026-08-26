@@ -11,6 +11,8 @@ public interface AuthService {
 
     AuthTokenSet login(final String login, final String password);
 
+    void logout(final String refreshTokenValue);
+
     AccessTokenExpiryInfo refreshToken(final String refreshTokenValue);
 
 }

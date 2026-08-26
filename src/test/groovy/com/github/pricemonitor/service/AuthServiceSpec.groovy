@@ -247,4 +247,15 @@ class AuthServiceSpec extends Specification {
             0 * this.tokenProvider.generateAccessToken(_)
     }
 
+    def "Should delete refresh token from redis on logout"() {
+        given:
+            def tokenValue = "refresh-token-123"
+
+        when:
+            this.service.logout(tokenValue)
+
+        then:
+            1 * this.redisRepository.deleteById(tokenValue)
+    }
+
 }
