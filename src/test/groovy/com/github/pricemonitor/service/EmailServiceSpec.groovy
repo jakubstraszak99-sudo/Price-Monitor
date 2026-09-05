@@ -1,28 +1,23 @@
 package com.github.pricemonitor.service
 
+import com.github.pricemonitor.properties.AppProperties
 import com.github.pricemonitor.service.impl.EmailServiceImpl
 import jakarta.mail.internet.MimeMessage
 import org.springframework.mail.javamail.JavaMailSender
-import org.springframework.test.util.ReflectionTestUtils
 import spock.lang.Specification
 import spock.lang.Subject
 
 class EmailServiceSpec extends Specification {
 
     def mailSender = Mock(JavaMailSender)
-
-    @Subject
-    def service = new EmailServiceImpl(this.mailSender)
-
     def fromAddress = "noreply@pricemonitor.com"
     def appUrl = "http://appurl"
     def userEmail = "test@example.com"
     def testToken = "test-token-123"
+    def appProperties = new AppProperties(new AppProperties.Mail(this.fromAddress), null, this.appUrl)
 
-    def setup() {
-        ReflectionTestUtils.setField(this.service, "from", this.fromAddress)
-        ReflectionTestUtils.setField(this.service, "url", this.appUrl)
-    }
+    @Subject
+    def service = new EmailServiceImpl(this.mailSender, this.appProperties)
 
     def "Should successfully send verification email"() {
         given:

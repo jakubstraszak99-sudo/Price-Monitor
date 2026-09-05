@@ -1,6 +1,7 @@
 package com.github.pricemonitor.security;
 
 import com.github.pricemonitor.exception.PmRuntimeException;
+import com.github.pricemonitor.properties.AppProperties;
 import com.github.pricemonitor.redis.RefreshToken;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
@@ -8,7 +9,6 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.security.SignatureException;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
@@ -22,34 +22,26 @@ import static com.github.pricemonitor.exception.ExceptionCode.E006;
 public class TokenProvider {
 
     private final SecretKey key;
-    private final long verificationExpirationMs;
-    private final long accessExpirationMs;
-    private final long refreshExpirationMs;
+    private final AppProperties.Jwt jwt;
 
-    public TokenProvider(
-            @Value("${app.jwt.secret}") final String secret,
-            @Value("${app.jwt.verification-expiration-ms}") final long verificationExpirationMs,
-            @Value("${app.jwt.access-expiration-ms}") final long accessExpirationMs,
-            @Value("${app.jwt.refresh-expiration-ms}") final long refreshExpirationMs) {
-        this.key = Keys.hmacShaKeyFor(Decoders.BASE64.decode(secret));
-        this.verificationExpirationMs = verificationExpirationMs;
-        this.accessExpirationMs = accessExpirationMs;
-        this.refreshExpirationMs = refreshExpirationMs;
+    public TokenProvider(final AppProperties appProperties) {
+        this.jwt = appProperties.jwt();
+        this.key = Keys.hmacShaKeyFor(Decoders.BASE64.decode(this.jwt.secret()));
     }
 
     public String generateVerificationToken(final UUID userPublicId) {
-        return this.buildToken(userPublicId, this.verificationExpirationMs);
+        return this.buildToken(userPublicId, this.jwt.verificationExpirationMs());
     }
 
     public String generateAccessToken(final UUID userPublicId) {
-        return this.buildToken(userPublicId, this.accessExpirationMs);
+        return this.buildToken(userPublicId, this.jwt.accessExpirationMs());
     }
 
     public RefreshToken generateRefreshToken(final UUID userPublicId) {
         return RefreshToken.builder()
                 .tokenId(UUID.randomUUID().toString())
                 .userPublicId(userPublicId)
-                .expirationInSeconds(this.refreshExpirationMs / 1000)
+                .expirationInSeconds(this.jwt.refreshExpirationMs() / 1000)
                 .build();
     }
 
@@ -69,13 +61,12 @@ public class TokenProvider {
     }
 
     public long getAccessExpirationInSeconds() {
-        return this.accessExpirationMs / 1000;
+        return this.jwt.accessExpirationMs() / 1000;
     }
 
     private String buildToken(final UUID userPublicId, final long expirationTimeMs) {
         final Date currentDate = new Date();
         final Date expirationDate = new Date(currentDate.getTime() + expirationTimeMs);
-
         return Jwts.builder()
                 .subject(userPublicId.toString())
                 .issuedAt(currentDate)

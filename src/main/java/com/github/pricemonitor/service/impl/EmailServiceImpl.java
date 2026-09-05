@@ -1,11 +1,11 @@
 package com.github.pricemonitor.service.impl;
 
+import com.github.pricemonitor.properties.AppProperties;
 import com.github.pricemonitor.service.EmailService;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
@@ -57,12 +57,7 @@ public class EmailServiceImpl implements EmailService {
             """;
 
     private final JavaMailSender mailSender;
-
-    @Value("${app.mail.from}")
-    private String from;
-
-    @Value("${app.server-url}")
-    private String url;
+    private final AppProperties appProperties;
 
     @Override
     public void sendVerificationEmail(final String to, final String token) {
@@ -83,7 +78,7 @@ public class EmailServiceImpl implements EmailService {
         try {
             final MimeMessage mimeMessage = this.mailSender.createMimeMessage();
             final MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, "utf-8");
-            helper.setFrom(this.from);
+            helper.setFrom(this.appProperties.mail().from());
             helper.setTo(to);
             helper.setSubject(subject);
             helper.setText(htmlContent, true);
@@ -94,7 +89,7 @@ public class EmailServiceImpl implements EmailService {
     }
 
     private String buildLink(final String apiPath, final String token) {
-        return this.url + apiPath + token;
+        return this.appProperties.clientUrl() + apiPath + token;
     }
 
 }

@@ -46,5 +46,4 @@ app:
     verification-expiration-ms: 10800000
     access-expiration-ms: 1800000
     refresh-expiration-ms: 2592000000
-  server-url: http://localhost:8080
   client-url: http://localhost:4200

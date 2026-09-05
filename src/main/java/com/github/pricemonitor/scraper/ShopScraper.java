@@ -36,14 +36,14 @@ public abstract class ShopScraper {
         final Document doc = this.getDocument(url);
         final String name = this.extractName(doc);
         final String price = this.extractPrice(doc);
-        final URI imageUrl = this.extractImage(doc);
+        final String imageUrl = this.extractImage(doc);
         final Currency currency = this.extractCurrency(doc);
 
         if (StringUtils.isBlank(name) || StringUtils.isBlank(price)) {
             throw new PmRuntimeException(E010);
         }
 
-        return new ScrapedProduct(name, this.parsePrice(price), imageUrl, currency);
+        return new ScrapedProduct(name, this.parsePrice(price), URI.create(imageUrl), currency);
     }
 
     public abstract boolean supports(final String url);
@@ -66,11 +66,10 @@ public abstract class ShopScraper {
                 .orElse(null);
     }
 
-    protected URI extractImage(final Document doc) {
+    protected String extractImage(final Document doc) {
         return Optional.ofNullable(doc.selectFirst("meta[property=og:image]"))
                 .map(element -> element.attr("content"))
                 .filter(StringUtils::isNotBlank)
-                .map(URI::create)
                 .orElse(null);
     }
 
