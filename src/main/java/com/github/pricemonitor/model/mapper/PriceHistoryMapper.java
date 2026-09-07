@@ -10,6 +10,7 @@ public interface PriceHistoryMapper {
 
     PriceHistory map(final PriceHistoryEntity entity);
 
+    @Mapping(target = "id", ignore = true)
     @Mapping(target = "product", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     PriceHistoryEntity map(final PriceHistory history);

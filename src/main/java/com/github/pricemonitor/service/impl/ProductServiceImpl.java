@@ -31,7 +31,7 @@ public class ProductServiceImpl implements ProductService {
     @Override
     @Transactional
     public ProductEntity getOrCreateProduct(final String url, final ScrapedProduct data) {
-        return this.findProduct(url).orElseGet(() -> this.createProduct(url, data));
+        return this.findProduct(url).orElseGet(() -> this.saveNewProduct(url, data));
     }
 
     @Override
@@ -58,7 +58,7 @@ public class ProductServiceImpl implements ProductService {
         return reply.scrapedProduct();
     }
 
-    private ProductEntity createProduct(final String url, final ScrapedProduct data) {
+    private ProductEntity saveNewProduct(final String url, final ScrapedProduct data) {
         final ProductEntity product = this.productMapper.map(data, url);
         return this.productRepository.save(product);
     }

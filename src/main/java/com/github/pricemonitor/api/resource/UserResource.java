@@ -1,6 +1,7 @@
 package com.github.pricemonitor.api.resource;
 
 import com.github.pricemonitor.api.UserApi;
+import com.github.pricemonitor.model.dto.User;
 import com.github.pricemonitor.model.request.password.ResetPasswordRequest;
 import com.github.pricemonitor.model.request.password.UpdatePasswordRequest;
 import com.github.pricemonitor.model.request.password.ForgotPasswordRequest;
@@ -17,6 +18,12 @@ import java.util.UUID;
 public class UserResource implements UserApi {
 
     private final UserService userService;
+
+    @Override
+    public ResponseEntity<User> getUser(final UUID userPublicId) {
+        final User user = this.userService.getUser(userPublicId);
+        return ResponseEntity.status(HttpStatus.OK).body(user);
+    }
 
     @Override
     public ResponseEntity<Void> updatePassword(final UpdatePasswordRequest request, final UUID userPublicId) {

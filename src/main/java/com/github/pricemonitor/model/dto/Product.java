@@ -6,7 +6,6 @@ import java.time.LocalDateTime;
 import java.util.Currency;
 
 public record Product(
-        Long id,
         String name,
         URI productUrl,
         URI imageUrl,

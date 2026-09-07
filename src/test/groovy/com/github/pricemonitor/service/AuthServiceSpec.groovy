@@ -41,9 +41,10 @@ class AuthServiceSpec extends Specification {
         given:
             def existingUser = UserEntity.builder()
                     .email(this.email)
+                    .username(this.username)
                     .verified(true)
                     .build()
-            this.userRepository.findByEmail(this.email) >> Optional.of(existingUser)
+            this.userRepository.findByUsernameOrEmail(this.username, this.email) >> Optional.of(existingUser)
 
         when:
             this.service.registerUser(this.username, this.email, this.password)
@@ -58,10 +59,11 @@ class AuthServiceSpec extends Specification {
         given:
             def unverifiedUser = UserEntity.builder()
                     .email(this.email)
+                    .username(this.username)
                     .verified(false)
                     .build()
-            this.userRepository.findByEmail(this.email) >> Optional.of(unverifiedUser)
-            this.passwordEncoder.encode(this.password) >> this.passwordHash
+        this.userRepository.findByUsernameOrEmail(this.username, this.email) >> Optional.of(unverifiedUser)
+        this.passwordEncoder.encode(this.password) >> this.passwordHash
             this.tokenProvider.generateVerificationToken(_ as UUID) >> this.token
 
         when:
@@ -76,7 +78,7 @@ class AuthServiceSpec extends Specification {
 
     def "Should register new user and publish event when email does not exist"() {
         given:
-            this.userRepository.findByEmail(this.email) >> Optional.empty()
+            this.userRepository.findByUsernameOrEmail(this.username, this.email) >> Optional.empty()
             this.passwordEncoder.encode(this.password) >> this.passwordHash
             this.tokenProvider.generateVerificationToken(_ as UUID) >> this.token
 
@@ -95,7 +97,9 @@ class AuthServiceSpec extends Specification {
                     .publicId(this.userId)
                     .verified(false)
                     .build()
+            def refreshToken = new RefreshToken(tokenId: "refresh-token-123", userPublicId: this.userId, expirationInSeconds: 3600L)
             this.tokenProvider.extractUserPublicId(this.token) >> this.userId
+            this.tokenProvider.generateRefreshToken(this.userId) >> refreshToken
             this.userRepository.findByPublicId(this.userId) >> Optional.of(user)
 
         when:

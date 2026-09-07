@@ -14,7 +14,7 @@ public enum ExceptionCode {
     E004("New password is the same as the old one", HttpStatus.BAD_REQUEST),
     E005("JWT token date expired", HttpStatus.UNAUTHORIZED),
     E006("JWT token is invalid", HttpStatus.UNAUTHORIZED),
-    E007("Email address already exists", HttpStatus.CONFLICT),
+    E007("User already exists", HttpStatus.CONFLICT),
     E008("Invalid credentials", HttpStatus.UNAUTHORIZED),
     E009("Session expired", HttpStatus.UNAUTHORIZED),
     E010("Product or price could not be identified with the provided URL", HttpStatus.UNPROCESSABLE_CONTENT),

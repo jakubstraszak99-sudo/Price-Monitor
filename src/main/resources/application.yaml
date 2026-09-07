@@ -37,6 +37,7 @@ logging:
   level:
     org.apache.kafka: WARN
     org.hibernate.SQL: DEBUG
+    org.springframework.security: DEBUG
 
 app:
   mail:

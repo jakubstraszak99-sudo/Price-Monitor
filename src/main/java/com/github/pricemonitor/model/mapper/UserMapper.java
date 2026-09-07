@@ -10,8 +10,4 @@ public interface UserMapper {
 
     User map(final UserEntity entity);
 
-    @Mapping(target = "priceAlerts", ignore = true)
-    @Mapping(target = "createdAt", ignore = true)
-    UserEntity map(final User user);
-
 }

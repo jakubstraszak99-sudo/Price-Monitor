@@ -3,7 +3,9 @@ package com.github.pricemonitor.service.impl;
 import com.github.pricemonitor.exception.PmRuntimeException;
 import com.github.pricemonitor.kafka.KafkaEventPublisher;
 import com.github.pricemonitor.kafka.message.EmailNotificationMessage;
+import com.github.pricemonitor.model.dto.User;
 import com.github.pricemonitor.model.entity.UserEntity;
+import com.github.pricemonitor.model.mapper.UserMapper;
 import com.github.pricemonitor.repository.UserRepository;
 import com.github.pricemonitor.security.TokenProvider;
 import com.github.pricemonitor.service.UserService;
@@ -24,21 +26,28 @@ import static com.github.pricemonitor.utils.KafkaUtil.PASSWORD_RESET_TOPIC;
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
+    private final UserMapper userMapper;
     private final TokenProvider tokenProvider;
     private final KafkaEventPublisher eventPublisher;
     private final PasswordEncoder passwordEncoder;
 
     @Override
     @Transactional(readOnly = true)
-    public UserEntity getUser(final UUID publicId) {
+    public UserEntity getUserEntity(final UUID publicId) {
         return this.userRepository.findByPublicId(publicId)
                 .orElseThrow(() -> new PmRuntimeException(E001));
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public User getUser(final UUID publicId) {
+        return this.userMapper.map(this.getUserEntity(publicId));
+    }
+
+    @Override
     @Transactional
     public void updatePassword(final UUID userPublicId, final String oldPassword, final String newPassword) {
-        final UserEntity user = this.getUser(userPublicId);
+        final UserEntity user = this.getUserEntity(userPublicId);
 
         if (!this.passwordEncoder.matches(oldPassword, user.getPasswordHash())) {
             throw new PmRuntimeException(E003);
@@ -68,7 +77,7 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public void resetPassword(final String resetToken, final String newPassword) {
         final UUID userPublicId = this.tokenProvider.extractUserPublicId(resetToken);
-        final UserEntity user = this.getUser(userPublicId);
+        final UserEntity user = this.getUserEntity(userPublicId);
         user.setPasswordHash(this.passwordEncoder.encode(newPassword));
         this.userRepository.save(user);
     }

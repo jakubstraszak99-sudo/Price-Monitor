@@ -7,7 +7,7 @@ public interface AuthService {
 
     void registerUser(final String username, final String email, final String password);
 
-    void verifyAccount(final String token);
+    AuthTokenSet verifyAccount(final String token);
 
     AuthTokenSet login(final String login, final String password);
 

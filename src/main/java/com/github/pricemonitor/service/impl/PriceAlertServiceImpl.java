@@ -31,7 +31,7 @@ public class PriceAlertServiceImpl implements PriceAlertService {
                                  final BigDecimal targetPrice,
                                  final ScrapedProduct scrapedProduct,
                                  final UUID userPublicId) {
-        final UserEntity user = this.userService.getUser(userPublicId);
+        final UserEntity user = this.userService.getUserEntity(userPublicId);
         final ProductEntity product = this.productService.getOrCreateProduct(url, scrapedProduct);
         final PriceAlertEntity alert = this.priceAlertMapper.map(user, product, targetPrice);
         this.priceAlertRepository.save(alert);

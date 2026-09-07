@@ -4,6 +4,7 @@ import com.github.pricemonitor.exception.ExceptionCode
 import com.github.pricemonitor.exception.PmRuntimeException
 import com.github.pricemonitor.kafka.KafkaEventPublisher
 import com.github.pricemonitor.model.entity.UserEntity
+import com.github.pricemonitor.model.mapper.UserMapperImpl
 import com.github.pricemonitor.repository.UserRepository
 import com.github.pricemonitor.security.TokenProvider
 import com.github.pricemonitor.service.impl.UserServiceImpl
@@ -17,10 +18,12 @@ class UserServiceSpec extends Specification {
     def tokenProvider = Mock(TokenProvider)
     def eventPublisher = Mock(KafkaEventPublisher)
     def passwordEncoder = Mock(PasswordEncoder)
+    def userMapper = new UserMapperImpl()
 
     @Subject
     def service = new UserServiceImpl(
             this.userRepository,
+            this.userMapper,
             this.tokenProvider,
             this.eventPublisher,
             this.passwordEncoder
@@ -36,7 +39,7 @@ class UserServiceSpec extends Specification {
             this.userRepository.findByPublicId(this.userId) >> Optional.of(user)
 
         when:
-            def result = this.service.getUser(this.userId)
+            def result = this.service.getUserEntity(this.userId)
 
         then:
             result == user
@@ -47,7 +50,7 @@ class UserServiceSpec extends Specification {
             this.userRepository.findByPublicId(this.userId) >> Optional.empty()
 
         when: "getting user"
-            this.service.getUser(this.userId)
+            this.service.getUserEntity(this.userId)
 
         then:
             def e = thrown(PmRuntimeException)

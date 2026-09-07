@@ -29,8 +29,14 @@ public class AuthResource implements AuthApi {
 
     @Override
     public ResponseEntity<Void> verify(final String token) {
-        this.authService.verifyAccount(token);
-        return ResponseEntity.status(HttpStatus.OK).build();
+        final AuthTokenSet authTokenSet = this.authService.verifyAccount(token);
+        final ResponseCookie accessCookie = this.buildAccessCookie(authTokenSet.accessToken(), authTokenSet.accessExpirationSeconds());
+        final ResponseCookie refreshCookie = this.buildRefreshCookie(authTokenSet.refreshToken(), authTokenSet.refreshExpirationSeconds());
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, accessCookie.toString())
+                .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
+                .build();
     }
 
     @Override

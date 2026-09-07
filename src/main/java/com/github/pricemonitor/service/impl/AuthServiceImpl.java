@@ -36,7 +36,7 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional
     public void registerUser(final String username, final String email, final String password) {
-        this.userRepository.findByEmail(email).ifPresent(
+        this.userRepository.findByUsernameOrEmail(username, email).ifPresent(
                 existingUser -> {
                     if (existingUser.getVerified()) {
                         throw new PmRuntimeException(E007);
@@ -60,7 +60,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     @Transactional
-    public void verifyAccount(final String token) {
+    public AuthTokenSet verifyAccount(final String token) {
         final UUID publicId = this.tokenProvider.extractUserPublicId(token);
         final UserEntity user = this.userRepository.findByPublicId(publicId)
                 .orElseThrow(() -> new PmRuntimeException(E001));
@@ -71,6 +71,8 @@ public class AuthServiceImpl implements AuthService {
 
         user.setVerified(true);
         userRepository.save(user);
+
+        return this.createTokenSet(user.getPublicId());
     }
 
     @Override
@@ -84,12 +86,7 @@ public class AuthServiceImpl implements AuthService {
             throw new PmRuntimeException(E008);
         }
 
-        final String accessToken = this.tokenProvider.generateAccessToken(user.getPublicId());
-        final RefreshToken refreshToken = this.tokenProvider.generateRefreshToken(user.getPublicId());
-
-        this.redisRepository.save(refreshToken);
-
-        return new AuthTokenSet(accessToken, refreshToken.getTokenId(), this.tokenProvider.getAccessExpirationInSeconds(), refreshToken.getExpirationInSeconds());
+        return this.createTokenSet(user.getPublicId());
     }
 
     @Override
@@ -107,6 +104,20 @@ public class AuthServiceImpl implements AuthService {
         final long accessExpirationSeconds = this.tokenProvider.getAccessExpirationInSeconds();
 
         return new AccessTokenExpiryInfo(accessToken, accessExpirationSeconds);
+    }
+
+    private AuthTokenSet createTokenSet(final UUID userPublicId) {
+        final String accessToken = this.tokenProvider.generateAccessToken(userPublicId);
+        final RefreshToken refreshToken = this.tokenProvider.generateRefreshToken(userPublicId);
+
+        this.redisRepository.save(refreshToken);
+
+        return new AuthTokenSet(
+                accessToken,
+                refreshToken.getTokenId(),
+                this.tokenProvider.getAccessExpirationInSeconds(),
+                refreshToken.getExpirationInSeconds()
+        );
     }
 
 }

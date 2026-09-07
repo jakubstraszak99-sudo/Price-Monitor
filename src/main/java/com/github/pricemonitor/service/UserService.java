@@ -1,12 +1,15 @@
 package com.github.pricemonitor.service;
 
+import com.github.pricemonitor.model.dto.User;
 import com.github.pricemonitor.model.entity.UserEntity;
 
 import java.util.UUID;
 
 public interface UserService {
 
-    UserEntity getUser(final UUID publicId);
+    UserEntity getUserEntity(final UUID publicId);
+
+    User getUser(final UUID publicId);
 
     void updatePassword(final UUID userPublicId, final String oldPassword, final String newPassword);
 

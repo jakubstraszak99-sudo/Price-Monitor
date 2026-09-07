@@ -34,7 +34,7 @@ class PriceAlertServiceSpec extends Specification {
             def user = new UserEntity(publicId: this.userPublicId, username: "testuser")
             def product = new ProductEntity(productUrl: this.url, name: "Test Product")
 
-            this.userService.getUser(this.userPublicId) >> user
+            this.userService.getUserEntity(this.userPublicId) >> user
             this.productService.getOrCreateProduct(this.url, this.scrapedProduct) >> product
 
         when:

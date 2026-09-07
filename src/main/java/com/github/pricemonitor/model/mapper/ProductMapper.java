@@ -13,6 +13,7 @@ public interface ProductMapper {
 
     Product map(final ProductEntity entity);
 
+    @Mapping(target = "id", ignore = true)
     @Mapping(target = "priceHistories", ignore = true)
     @Mapping(target = "priceAlerts", ignore = true)
     @Mapping(target = "createdAt", ignore = true)

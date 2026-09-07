@@ -22,7 +22,7 @@ public interface PriceAlertApi {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Price alert created successfully"),
             @ApiResponse(responseCode = "400", description = "Invalid request"),
-            @ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized")
     })
     @PostMapping
     ResponseEntity<Void> createAlert(
