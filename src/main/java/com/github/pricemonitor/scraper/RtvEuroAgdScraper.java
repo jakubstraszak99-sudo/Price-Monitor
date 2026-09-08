@@ -8,12 +8,20 @@ import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Order(3)
 @Component
 public class RtvEuroAgdScraper extends ShopScraper {
 
     private static final String EURO_DOMAIN = "euro.com.pl";
+    private static final String SHOP_NAME = "RTV EURO AGD";
+    private static final String TITLE_SELECTOR = "h1.selenium-product-title";
+    private static final String FALLBACK_TITLE_SELECTOR = "h1";
+    private static final String SCHEMA_SCRIPT_SELECTOR = "script#product-card-schema";
+    private static final String PRICE_NORMAL_SELECTOR = "div.price-normal";
+    private static final Pattern SCHEMA_PRICE_PATTERN = Pattern.compile("\"price\":\\s*([0-9.]+)");
 
     public RtvEuroAgdScraper(final WebDriverConfig webDriverConfig) {
         super(webDriverConfig);
@@ -26,10 +34,10 @@ public class RtvEuroAgdScraper extends ShopScraper {
 
     @Override
     protected String extractName(final Document doc) {
-        return Optional.ofNullable(doc.selectFirst("h1.selenium-product-title"))
+        return Optional.ofNullable(doc.selectFirst(TITLE_SELECTOR))
                 .map(Element::text)
                 .filter(StringUtils::isNotBlank)
-                .orElseGet(() -> Optional.ofNullable(doc.selectFirst("h1"))
+                .orElseGet(() -> Optional.ofNullable(doc.selectFirst(FALLBACK_TITLE_SELECTOR))
                         .map(Element::text)
                         .orElseGet(() -> super.extractName(doc)));
     }
@@ -41,18 +49,22 @@ public class RtvEuroAgdScraper extends ShopScraper {
             return basePrice;
         }
 
-        final Element schemaScript = doc.selectFirst("script#product-card-schema");
+        final Element schemaScript = doc.selectFirst(SCHEMA_SCRIPT_SELECTOR);
         if (schemaScript != null) {
-            final String json = schemaScript.data();
-            final java.util.regex.Matcher matcher = java.util.regex.Pattern.compile("\"price\":\\s*([0-9.]+)").matcher(json);
+            final Matcher matcher = SCHEMA_PRICE_PATTERN.matcher(schemaScript.data());
             if (matcher.find()) {
                 return matcher.group(1);
             }
         }
 
-        return Optional.ofNullable(doc.selectFirst("div.price-normal"))
+        return Optional.ofNullable(doc.selectFirst(PRICE_NORMAL_SELECTOR))
                 .map(Element::text)
                 .orElse(super.extractPrice(doc));
+    }
+
+    @Override
+    protected String extractDomain(final String url) {
+        return SHOP_NAME;
     }
 
 }

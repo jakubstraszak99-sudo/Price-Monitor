@@ -1,20 +1,27 @@
 package com.github.pricemonitor.service.impl;
 
+import com.github.pricemonitor.exception.PmRuntimeException;
+import com.github.pricemonitor.model.dto.PriceAlert;
 import com.github.pricemonitor.model.dto.ScrapedProduct;
 import com.github.pricemonitor.model.entity.PriceAlertEntity;
 import com.github.pricemonitor.model.entity.ProductEntity;
 import com.github.pricemonitor.model.entity.UserEntity;
 import com.github.pricemonitor.model.mapper.PriceAlertMapper;
+import com.github.pricemonitor.model.page.PriceAlertPage;
 import com.github.pricemonitor.repository.PriceAlertRepository;
 import com.github.pricemonitor.service.PriceAlertService;
 import com.github.pricemonitor.service.ProductService;
 import com.github.pricemonitor.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.UUID;
+
+import static com.github.pricemonitor.exception.ExceptionCode.E014;
 
 @Service
 @RequiredArgsConstructor
@@ -33,8 +40,26 @@ public class PriceAlertServiceImpl implements PriceAlertService {
                                  final UUID userPublicId) {
         final UserEntity user = this.userService.getUserEntity(userPublicId);
         final ProductEntity product = this.productService.getOrCreateProduct(url, scrapedProduct);
+
+        if (this.priceAlertRepository.existsByUserAndProduct(user, product)) {
+            throw new PmRuntimeException(E014);
+        }
+
         final PriceAlertEntity alert = this.priceAlertMapper.map(user, product, targetPrice);
         this.priceAlertRepository.save(alert);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PriceAlertPage getPriceAlerts(final Pageable pageable,
+                                         final String search,
+                                         final UUID userPublicId) {
+        final UserEntity user = this.userService.getUserEntity(userPublicId);
+        final Page<PriceAlertEntity> alerts = (search != null && !search.isBlank())
+                ? this.priceAlertRepository.findByUserAndProductNameContainingIgnoreCase(user, search, pageable)
+                : this.priceAlertRepository.findByUser(user, pageable);
+        final Page<PriceAlert> page = alerts.map(this.priceAlertMapper::map);
+        return new PriceAlertPage(page.getContent(), pageable, page.getTotalElements());
     }
 
 }

@@ -38,6 +38,12 @@ public class ProductEntity extends BaseEntity {
     @Column(nullable = false)
     private LocalDateTime lastUpdated;
 
+    @Column
+    private String domain;
+
+    @Column(length = 1000)
+    private String faviconUrl;
+
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     @ToString.Exclude
     @EqualsAndHashCode.Exclude

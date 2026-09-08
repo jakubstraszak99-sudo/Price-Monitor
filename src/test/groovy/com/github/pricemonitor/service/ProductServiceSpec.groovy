@@ -30,7 +30,13 @@ class ProductServiceSpec extends Specification {
 
     def url = "https://example.com/product"
     def price = new BigDecimal("299.99")
-    def scrapedData = new ScrapedProduct("Test Product", this.price, URI.create("http://image.url"), Currency.getInstance("PLN"))
+    def scrapedData = new ScrapedProduct(
+            "Test Product",
+            new BigDecimal("299.99"),
+            URI.create("http://image.url"),
+            Currency.getInstance("PLN"),
+            "Test Shop",
+            URI.create("http://favicon.url"))
 
     def "Should return existing product entity when found in database"() {
         given:
@@ -121,7 +127,7 @@ class ProductServiceSpec extends Specification {
             e.getCode() == ExceptionCode.E011
     }
 
-    def "Should return paginated products mapped from entities"() {
+    def "Should return paginated products"() {
         given:
             def pageable = PageRequest.of(0, 20)
             def entity1 = ProductEntity.builder()
@@ -144,6 +150,7 @@ class ProductServiceSpec extends Specification {
         then:
             1 * this.productRepository.findAll(pageable) >> entityPage
             0 * this.productRepository.findByNameContainingIgnoreCase(_, _)
+
             result instanceof ProductPage
             result.content.size() == 2
             result.content[0].name() == "Product One"
@@ -162,6 +169,7 @@ class ProductServiceSpec extends Specification {
         then:
             1 * this.productRepository.findAll(pageable) >> emptyPage
             0 * this.productRepository.findByNameContainingIgnoreCase(_, _)
+
             result instanceof ProductPage
             result.content.isEmpty()
             result.totalElements == 0

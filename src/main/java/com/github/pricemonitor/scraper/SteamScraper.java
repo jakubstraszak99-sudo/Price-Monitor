@@ -20,6 +20,14 @@ import java.util.stream.Stream;
 public class SteamScraper extends ShopScraper {
 
     private static final String STEAM_DOMAIN = "steampowered.com/app";
+    private static final String SHOP_NAME = "Steam";
+    private static final String APP_NAME_SELECTOR = "div#appHubAppName";
+    private static final String DISCOUNT_PRICE_SELECTOR = "div.discount_final_price";
+    private static final String PURCHASE_PRICE_SELECTOR = "div.game_purchase_price";
+    private static final String PURCHASE_GAME_SELECTOR = "div.game_area_purchase_game";
+    private static final String FREE_TO_PLAY_LABEL = "Free to Play";
+    private static final String FREE_LABEL = "Free";
+    private static final String FREE_PRICE_VALUE = "0.00";
 
     private static final Map<String, String> CURRENCY_SYMBOLS = Map.of(
             "zł", "PLN",
@@ -41,7 +49,7 @@ public class SteamScraper extends ShopScraper {
 
     @Override
     protected String extractName(final Document doc) {
-        return Optional.ofNullable(doc.selectFirst("div#appHubAppName"))
+        return Optional.ofNullable(doc.selectFirst(APP_NAME_SELECTOR))
                 .map(Element::text)
                 .filter(StringUtils::isNotBlank)
                 .orElseGet(() -> super.extractName(doc));
@@ -50,11 +58,10 @@ public class SteamScraper extends ShopScraper {
     @Override
     protected String extractPrice(final Document doc) {
         if (this.isFreeToPlay(doc)) {
-            return "0.00";
+            return FREE_PRICE_VALUE;
         }
-
         return this.findPrice(doc)
-                .map(rawPrice -> Strings.CI.contains(rawPrice, "Free") ? "0.00" : rawPrice)
+                .map(rawPrice -> Strings.CI.contains(rawPrice, FREE_LABEL) ? FREE_PRICE_VALUE : rawPrice)
                 .orElseGet(() -> super.extractPrice(doc));
     }
 
@@ -65,13 +72,18 @@ public class SteamScraper extends ShopScraper {
                 .orElseGet(() -> super.extractCurrency(doc));
     }
 
+    @Override
+    protected String extractDomain(final String url) {
+        return SHOP_NAME;
+    }
+
     private boolean isFreeToPlay(final Document doc) {
-        final Element purchaseBlock = doc.selectFirst("div.game_area_purchase_game");
-        return purchaseBlock != null && Strings.CI.contains(purchaseBlock.text(), "Free to Play");
+        final Element purchaseBlock = doc.selectFirst(PURCHASE_GAME_SELECTOR);
+        return purchaseBlock != null && Strings.CI.contains(purchaseBlock.text(), FREE_TO_PLAY_LABEL);
     }
 
     private Optional<String> findPrice(final Document doc) {
-        return Stream.of("div.discount_final_price", "div.game_purchase_price")
+        return Stream.of(DISCOUNT_PRICE_SELECTOR, PURCHASE_PRICE_SELECTOR)
                 .map(doc::selectFirst)
                 .filter(Objects::nonNull)
                 .map(Element::text)
@@ -86,7 +98,6 @@ public class SteamScraper extends ShopScraper {
                 return Currency.getInstance(entry.getValue());
             }
         }
-
         return null;
     }
 

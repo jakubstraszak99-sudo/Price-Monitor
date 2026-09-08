@@ -51,12 +51,12 @@ public interface ProductApi {
     @PostMapping("/info/preview")
     ResponseEntity<ScrapedProduct> extractProductInfo(@RequestBody @Valid final ProductInfoRequest request);
 
-    @Operation(summary = "Fetch products", description = "Returns a paginated list of products from database")
+    @Operation(summary = "Fetch products", description = "Returns a paginated list of products")
     @ApiResponse(
             responseCode = "200",
             description = "Page of products retrieved successfully",
             content = @Content(
-                    mediaType = "application/json",
+                    mediaType = MediaType.APPLICATION_JSON_VALUE,
                     schema = @Schema(implementation = ProductPage.class)
             )
     )

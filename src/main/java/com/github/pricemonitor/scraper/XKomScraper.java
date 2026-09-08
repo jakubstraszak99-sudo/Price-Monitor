@@ -14,6 +14,10 @@ import java.util.Optional;
 public class XKomScraper extends ShopScraper {
 
     private static final String X_KOM_DOMAIN = "x-kom.pl";
+    private static final String SHOP_NAME = "x-kom";
+    private static final String TITLE_SELECTOR = "h1";
+    private static final String PRODUCT_PRICE_SELECTOR = "div[data-name=productPrice] span";
+    private static final String PRICE_SPAN_SELECTOR = "div[id=app] span:contains(zł)";
 
     public XKomScraper(final WebDriverConfig webDriverConfig) {
         super(webDriverConfig);
@@ -26,7 +30,7 @@ public class XKomScraper extends ShopScraper {
 
     @Override
     protected String extractName(final Document doc) {
-        return Optional.ofNullable(doc.selectFirst("h1"))
+        return Optional.ofNullable(doc.selectFirst(TITLE_SELECTOR))
                 .map(Element::text)
                 .filter(StringUtils::isNotBlank)
                 .orElseGet(() -> super.extractName(doc));
@@ -34,17 +38,22 @@ public class XKomScraper extends ShopScraper {
 
     @Override
     protected String extractPrice(final Document doc) {
-        final Element priceElement = doc.selectFirst("div[data-name=productPrice] span");
+        final Element priceElement = doc.selectFirst(PRODUCT_PRICE_SELECTOR);
         if (priceElement != null && StringUtils.isNotBlank(priceElement.text())) {
             return priceElement.text();
         }
 
-        final Element priceSpan = doc.selectFirst("div[id=app] span:contains(zł)");
+        final Element priceSpan = doc.selectFirst(PRICE_SPAN_SELECTOR);
         if (priceSpan != null && StringUtils.isNotBlank(priceSpan.text())) {
             return priceSpan.text();
         }
 
         return super.extractPrice(doc);
+    }
+
+    @Override
+    protected String extractDomain(final String url) {
+        return SHOP_NAME;
     }
 
 }

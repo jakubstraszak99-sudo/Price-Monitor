@@ -14,6 +14,11 @@ import java.util.Optional;
 public class MediaExpertScraper extends ShopScraper {
 
     private static final String MEDIA_EXPERT_DOMAIN = "mediaexpert.pl";
+    private static final String SHOP_NAME = "Media Expert";
+    private static final String TITLE_SELECTOR = "h1.is-title";
+    private static final String FALLBACK_TITLE_SELECTOR = "h1";
+    private static final String PRICE_WHOLE_SELECTOR = "span.whole";
+    private static final String PRICE_CENTS_SELECTOR = "span.cents";
 
     public MediaExpertScraper(final WebDriverConfig webDriverConfig) {
         super(webDriverConfig);
@@ -26,10 +31,10 @@ public class MediaExpertScraper extends ShopScraper {
 
     @Override
     protected String extractName(final Document doc) {
-        return Optional.ofNullable(doc.selectFirst("h1.is-title"))
+        return Optional.ofNullable(doc.selectFirst(TITLE_SELECTOR))
                 .map(Element::text)
                 .filter(StringUtils::isNotBlank)
-                .orElseGet(() -> Optional.ofNullable(doc.selectFirst("h1"))
+                .orElseGet(() -> Optional.ofNullable(doc.selectFirst(FALLBACK_TITLE_SELECTOR))
                         .map(Element::text)
                         .orElseGet(() -> super.extractName(doc)));
     }
@@ -41,14 +46,19 @@ public class MediaExpertScraper extends ShopScraper {
             return basePrice;
         }
 
-        final Element wholeElement = doc.selectFirst("span.whole");
-        final Element centsElement = doc.selectFirst("span.cents");
+        final Element wholeElement = doc.selectFirst(PRICE_WHOLE_SELECTOR);
+        final Element centsElement = doc.selectFirst(PRICE_CENTS_SELECTOR);
 
         if (wholeElement != null) {
             return wholeElement.text() + (centsElement != null ? "." + centsElement.text() : "");
         }
 
         return null;
+    }
+
+    @Override
+    protected String extractDomain(final String url) {
+        return SHOP_NAME;
     }
 
 }

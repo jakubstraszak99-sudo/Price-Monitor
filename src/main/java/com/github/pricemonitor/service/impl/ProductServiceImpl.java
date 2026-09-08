@@ -53,7 +53,6 @@ public class ProductServiceImpl implements ProductService {
         final Page<ProductEntity> products = (search != null && !search.isBlank())
                 ? this.productRepository.findByNameContainingIgnoreCase(search, pageable)
                 : this.productRepository.findAll(pageable);
-
         final Page<Product> page = products.map(this.productMapper::map);
         return new ProductPage(page.getContent(), pageable, page.getTotalElements());
     }

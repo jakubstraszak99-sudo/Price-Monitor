@@ -20,7 +20,8 @@ public enum ExceptionCode {
     E010("Product or price could not be identified with the provided URL", HttpStatus.UNPROCESSABLE_CONTENT),
     E011("No URL support", HttpStatus.UNPROCESSABLE_CONTENT),
     E012("A network problem occurred while connecting", HttpStatus.BAD_GATEWAY),
-    E013("Failed to receive data", HttpStatus.GATEWAY_TIMEOUT);
+    E013("Failed to receive data", HttpStatus.GATEWAY_TIMEOUT),
+    E014("Price alert already exists", HttpStatus.CONFLICT);
 
     private final String message;
     private final HttpStatus status;

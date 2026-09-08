@@ -8,14 +8,21 @@ import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
 import java.math.BigDecimal;
+import java.util.UUID;
 
 @Getter
 @Setter
 @SuperBuilder
 @NoArgsConstructor
 @Entity
-@Table(name = "price_alerts")
+@Table(name = "price_alerts", indexes = {
+        @Index(name = "idx_price_alerts_public_id", columnList = "public_id", unique = true)
+})
 public class PriceAlertEntity extends BaseEntity {
+
+    @Column(nullable = false, updatable = false)
+    @Builder.Default
+    private UUID publicId = UUID.randomUUID();
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false)

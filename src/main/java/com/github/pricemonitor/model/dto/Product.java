@@ -11,5 +11,7 @@ public record Product(
         URI imageUrl,
         Currency currency,
         BigDecimal currentPrice,
-        LocalDateTime lastUpdated
+        LocalDateTime lastUpdated,
+        String domain,
+        URI faviconUrl
 ) {}

@@ -45,7 +45,6 @@ public class KafkaEventPublisher {
         try {
             final ConsumerRecord<String, KafkaMessage> consumerRecord = replyFuture.get();
             return (R) consumerRecord.value();
-
         } catch (InterruptedException | ExecutionException e) {
             log.error("Failed to receive reply for event: topic={}, identifier={}", topic, identifier, e);
             throw new PmRuntimeException(E013);

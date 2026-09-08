@@ -1,16 +1,20 @@
 package com.github.pricemonitor.repository;
 
 import com.github.pricemonitor.model.entity.PriceAlertEntity;
+import com.github.pricemonitor.model.entity.ProductEntity;
+import com.github.pricemonitor.model.entity.UserEntity;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
-
-import java.util.List;
 
 @Repository
 public interface PriceAlertRepository extends JpaRepository<PriceAlertEntity, Long> {
 
-    List<PriceAlertEntity> findAllByUserId(final Long userId);
+    boolean existsByUserAndProduct(final UserEntity user, final ProductEntity product);
 
-    List<PriceAlertEntity> findAllByProductIdAndActiveTrue(final Long productId);
+    Page<PriceAlertEntity> findByUser(final UserEntity user, final Pageable pageable);
+
+    Page<PriceAlertEntity> findByUserAndProductNameContainingIgnoreCase(final UserEntity user, final String search, final Pageable pageable);
 
 }

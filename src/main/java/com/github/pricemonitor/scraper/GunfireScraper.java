@@ -14,6 +14,9 @@ import java.util.Optional;
 public class GunfireScraper extends ShopScraper {
 
     private static final String GUNFIRE_DOMAIN = "gunfire.com";
+    private static final String PRICE_VALUE_SELECTOR = "strong.projector_price_value";
+    private static final String PRICE_SRP_SELECTOR = "span.projector_price_srp";
+    private static final String DATA_PRICE_ATTR = "data-price";
 
     public GunfireScraper(final WebDriverConfig webDriverConfig) {
         super(webDriverConfig);
@@ -25,10 +28,10 @@ public class GunfireScraper extends ShopScraper {
     }
 
     @Override
-    protected String extractPrice(Document doc) {
-        final String price = Optional.ofNullable(doc.selectFirst("strong.projector_price_value"))
+    protected String extractPrice(final Document doc) {
+        final String price = Optional.ofNullable(doc.selectFirst(PRICE_VALUE_SELECTOR))
                 .map(element -> {
-                    final String dataPrice = element.attr("data-price");
+                    final String dataPrice = element.attr(DATA_PRICE_ATTR);
                     return StringUtils.isNotBlank(dataPrice) ? dataPrice : element.text();
                 })
                 .filter(StringUtils::isNotBlank)
@@ -38,7 +41,7 @@ public class GunfireScraper extends ShopScraper {
             return price;
         }
 
-        return Optional.ofNullable(doc.selectFirst("span.projector_price_srp"))
+        return Optional.ofNullable(doc.selectFirst(PRICE_SRP_SELECTOR))
                 .map(Element::text)
                 .filter(StringUtils::isNotBlank)
                 .orElseGet(() -> super.extractPrice(doc));
