@@ -1,11 +1,12 @@
 package com.github.pricemonitor.api.resource;
 
 import com.github.pricemonitor.api.ProductApi;
-import com.github.pricemonitor.model.dto.Product;
 import com.github.pricemonitor.model.dto.ScrapedProduct;
+import com.github.pricemonitor.model.page.ProductPage;
 import com.github.pricemonitor.model.request.product.ProductInfoRequest;
 import com.github.pricemonitor.service.ProductService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
@@ -20,6 +21,12 @@ public class ProductResource implements ProductApi {
     public ResponseEntity<ScrapedProduct> extractProductInfo(final ProductInfoRequest request) {
         final ScrapedProduct scrapedProduct = this.productService.getProductInfo(request.url());
         return ResponseEntity.status(HttpStatus.OK).body(scrapedProduct);
+    }
+
+    @Override
+    public ResponseEntity<ProductPage> getProducts(final Pageable pageable, final String search) {
+        final ProductPage page = this.productService.getProducts(pageable, search);
+        return ResponseEntity.status(HttpStatus.OK).body(page);
     }
 
 }

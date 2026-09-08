@@ -7,8 +7,11 @@ import com.github.pricemonitor.kafka.message.ScraperReplyMessage
 import com.github.pricemonitor.model.dto.ScrapedProduct
 import com.github.pricemonitor.model.entity.ProductEntity
 import com.github.pricemonitor.model.mapper.ProductMapperImpl
+import com.github.pricemonitor.model.page.ProductPage
 import com.github.pricemonitor.repository.ProductRepository
 import com.github.pricemonitor.service.impl.ProductServiceImpl
+import org.springframework.data.domain.PageImpl
+import org.springframework.data.domain.PageRequest
 import spock.lang.Specification
 import spock.lang.Subject
 
@@ -116,6 +119,105 @@ class ProductServiceSpec extends Specification {
             1 * this.kafkaEventPublisher.publishAndReceive(_, this.url, { request -> request.url() == this.url }) >> replyMessage
             def e = thrown(PmRuntimeException)
             e.getCode() == ExceptionCode.E011
+    }
+
+    def "Should return paginated products mapped from entities"() {
+        given:
+            def pageable = PageRequest.of(0, 20)
+            def entity1 = ProductEntity.builder()
+                    .id(1L)
+                    .productUrl(this.url)
+                    .name("Product One")
+                    .currentPrice(this.price)
+                    .build()
+            def entity2 = ProductEntity.builder()
+                    .id(2L)
+                    .productUrl("https://example.com/other")
+                    .name("Product Two")
+                    .currentPrice(new BigDecimal("49.99"))
+                    .build()
+            def entityPage = new PageImpl<ProductEntity>([entity1, entity2], pageable, 2)
+
+        when:
+            def result = this.service.getProducts(pageable, null)
+
+        then:
+            1 * this.productRepository.findAll(pageable) >> entityPage
+            0 * this.productRepository.findByNameContainingIgnoreCase(_, _)
+            result instanceof ProductPage
+            result.content.size() == 2
+            result.content[0].name() == "Product One"
+            result.content[1].name() == "Product Two"
+            result.totalElements == 2
+    }
+
+    def "Should return empty ProductPage when no products found"() {
+        given:
+            def pageable = PageRequest.of(0, 20)
+            def emptyPage = new PageImpl<ProductEntity>([], pageable, 0)
+
+        when:
+            def result = this.service.getProducts(pageable, null)
+
+        then:
+            1 * this.productRepository.findAll(pageable) >> emptyPage
+            0 * this.productRepository.findByNameContainingIgnoreCase(_, _)
+            result instanceof ProductPage
+            result.content.isEmpty()
+            result.totalElements == 0
+    }
+
+    def "Should return filtered products when search term is provided"() {
+        given:
+            def searchTerm = "Product One"
+            def pageable = PageRequest.of(0, 20)
+            def entity1 = ProductEntity.builder()
+                    .id(1L)
+                    .productUrl(this.url)
+                    .name("Product One")
+                    .currentPrice(this.price)
+                    .build()
+            def filteredPage = new PageImpl<ProductEntity>([entity1], pageable, 1)
+            this.productRepository.findByNameContainingIgnoreCase(searchTerm, pageable) >> filteredPage
+
+        when:
+            def result = this.service.getProducts(pageable, searchTerm)
+
+        then:
+            result instanceof ProductPage
+            result.content.size() == 1
+            result.content[0].name() == "Product One"
+            result.totalElements == 1
+            0 * this.productRepository.findAll(_)
+        }
+
+    def "Should return empty ProductPage when search term matches nothing"() {
+        given:
+            def searchTerm = "nonexistent"
+            def pageable = PageRequest.of(0, 20)
+            def emptyPage = new PageImpl<ProductEntity>([], pageable, 0)
+            this.productRepository.findByNameContainingIgnoreCase(searchTerm, pageable) >> emptyPage
+
+        when:
+            def result = this.service.getProducts(pageable, searchTerm)
+
+        then:
+            result instanceof ProductPage
+            result.content.isEmpty()
+            result.totalElements == 0
+    }
+
+    def "Should call findAll instead of search when search term is blank"() {
+        given:
+            def pageable = PageRequest.of(0, 20)
+            def entityPage = new PageImpl<ProductEntity>([], pageable, 0)
+
+        when:
+            this.service.getProducts(pageable, "   ")
+
+        then:
+        1 * this.productRepository.findAll(pageable) >> entityPage
+        0 * this.productRepository.findByNameContainingIgnoreCase(_, _)
     }
 
 }
