@@ -12,6 +12,6 @@ public record Product(
         Currency currency,
         BigDecimal currentPrice,
         LocalDateTime lastUpdated,
-        String domain,
+        String shop,
         URI faviconUrl
 ) {}

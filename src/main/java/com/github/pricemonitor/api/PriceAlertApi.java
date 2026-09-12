@@ -1,7 +1,9 @@
 package com.github.pricemonitor.api;
 
+import com.github.pricemonitor.model.dto.PriceAlert;
 import com.github.pricemonitor.model.page.PriceAlertPage;
 import com.github.pricemonitor.model.request.alert.CreatePriceAlertRequest;
+import com.github.pricemonitor.model.request.alert.UpdatePriceAlertRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -52,4 +54,28 @@ public interface PriceAlertApi {
             @RequestParam(required = false) final String search,
             @AuthenticationPrincipal final UUID userPublicId
     );
+
+    @Operation(summary = "Update price alert", description = "Partially updates price alert (target price and/or active status)")
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Price alert updated successfully",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = PriceAlert.class))
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Price alert not found",
+                    content = @Content(schema = @Schema()))
+    })
+    @PatchMapping("/{publicId}")
+    ResponseEntity<PriceAlert> updatePriceAlert(
+            @PathVariable("publicId") final UUID publicId,
+            @RequestBody @Valid final UpdatePriceAlertRequest request
+    );
+
+    @Operation(summary = "Delete price alert", description = "Deletes price alert permanently")
+    @ApiResponse(responseCode = "204", description = "Price alert deleted successfully")
+    @DeleteMapping("/{publicId}/delete")
+    ResponseEntity<Void> deletePriceAlert(@PathVariable("publicId") final UUID alertPublicId);
+
 }

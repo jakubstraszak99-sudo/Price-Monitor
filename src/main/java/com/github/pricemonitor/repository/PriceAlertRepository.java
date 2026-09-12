@@ -8,6 +8,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
+import java.util.UUID;
+
 @Repository
 public interface PriceAlertRepository extends JpaRepository<PriceAlertEntity, Long> {
 
@@ -16,5 +19,9 @@ public interface PriceAlertRepository extends JpaRepository<PriceAlertEntity, Lo
     Page<PriceAlertEntity> findByUser(final UserEntity user, final Pageable pageable);
 
     Page<PriceAlertEntity> findByUserAndProductNameContainingIgnoreCase(final UserEntity user, final String search, final Pageable pageable);
+
+    Optional<PriceAlertEntity> findByPublicId(final UUID publicId);
+
+    void deleteByPublicId(final UUID publicId);
 
 }

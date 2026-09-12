@@ -9,6 +9,6 @@ public record ScrapedProduct(
         BigDecimal price,
         URI imageUrl,
         Currency currency,
-        String domain,
+        String shop,
         URI faviconUrl
 ) {}

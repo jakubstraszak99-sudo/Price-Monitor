@@ -49,14 +49,14 @@ public abstract class ShopScraper {
         final String price = this.extractPrice(doc);
         final String imageUrl = this.extractImage(doc);
         final Currency currency = this.extractCurrency(doc);
-        final String domain = this.extractDomain(url);
+        final String shop = this.extractShop(url);
         final String faviconUrl = this.extractFavicon(doc, url);
 
         if (StringUtils.isBlank(name) || StringUtils.isBlank(price)) {
             throw new PmRuntimeException(E010);
         }
 
-        return new ScrapedProduct(name, this.parsePrice(price), URI.create(imageUrl), currency, domain, URI.create(faviconUrl));
+        return new ScrapedProduct(name, this.parsePrice(price), URI.create(imageUrl), currency, shop, URI.create(faviconUrl));
     }
 
     public abstract boolean supports(final String url);
@@ -90,8 +90,8 @@ public abstract class ShopScraper {
         return Currency.getInstance(DEFAULT_CURRENCY_CODE);
     }
 
-    protected String extractDomain(final String url) {
-        return this.capitalize(this.extractDomainLabel(url));
+    protected String extractShop(final String url) {
+        return this.capitalize(this.extractShopLabel(url));
     }
 
     protected String extractFavicon(final Document doc, final String url) {
@@ -140,7 +140,7 @@ public abstract class ShopScraper {
     }
 
     @Nullable
-    private String extractDomainLabel(final String url) {
+    private String extractShopLabel(final String url) {
         try {
             final String host = URI.create(url).getHost();
             if (host == null) {

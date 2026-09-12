@@ -8,6 +8,7 @@ import com.github.pricemonitor.model.entity.ProductEntity;
 import com.github.pricemonitor.model.entity.UserEntity;
 import com.github.pricemonitor.model.mapper.PriceAlertMapper;
 import com.github.pricemonitor.model.page.PriceAlertPage;
+import com.github.pricemonitor.model.request.alert.UpdatePriceAlertRequest;
 import com.github.pricemonitor.repository.PriceAlertRepository;
 import com.github.pricemonitor.service.PriceAlertService;
 import com.github.pricemonitor.service.ProductService;
@@ -22,6 +23,7 @@ import java.math.BigDecimal;
 import java.util.UUID;
 
 import static com.github.pricemonitor.exception.ExceptionCode.E014;
+import static com.github.pricemonitor.exception.ExceptionCode.E015;
 
 @Service
 @RequiredArgsConstructor
@@ -60,6 +62,29 @@ public class PriceAlertServiceImpl implements PriceAlertService {
                 : this.priceAlertRepository.findByUser(user, pageable);
         final Page<PriceAlert> page = alerts.map(this.priceAlertMapper::map);
         return new PriceAlertPage(page.getContent(), pageable, page.getTotalElements());
+    }
+
+    @Override
+    @Transactional
+    public PriceAlert updatePriceAlert(final UUID alertPublicId, final UpdatePriceAlertRequest request) {
+        final PriceAlertEntity alert = this.priceAlertRepository.findByPublicId(alertPublicId)
+                .orElseThrow(() -> new PmRuntimeException(E015));
+
+        if (request.targetPrice() != null) {
+            alert.setTargetPrice(request.targetPrice());
+        }
+
+        if (request.active() != null) {
+            alert.setActive(request.active());
+        }
+
+        return this.priceAlertMapper.map(alert);
+    }
+
+    @Override
+    @Transactional
+    public void deletePriceAlert(final UUID alertPublicId) {
+        this.priceAlertRepository.deleteByPublicId(alertPublicId);
     }
 
 }

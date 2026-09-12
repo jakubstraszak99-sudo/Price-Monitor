@@ -9,6 +9,7 @@ import com.github.pricemonitor.model.entity.UserEntity
 import com.github.pricemonitor.model.mapper.PriceAlertMapperImpl
 import com.github.pricemonitor.model.mapper.ProductMapperImpl
 import com.github.pricemonitor.model.page.PriceAlertPage
+import com.github.pricemonitor.model.request.alert.UpdatePriceAlertRequest
 import com.github.pricemonitor.repository.PriceAlertRepository
 import com.github.pricemonitor.service.impl.PriceAlertServiceImpl
 import org.springframework.data.domain.PageImpl
@@ -32,15 +33,10 @@ class PriceAlertServiceSpec extends Specification {
             this.priceAlertMapper
     )
 
-    def userPublicId = UUID.randomUUID()
-    def testUser = new UserEntity(publicId: this.userPublicId, username: "testuser")
-
-    def setup() {
-        this.userService.getUserEntity(this.userPublicId) >> this.testUser
-    }
-
     def "Should successfully create and save price alert"() {
         given:
+            def userPublicId = UUID.randomUUID()
+            def testUser = new UserEntity(publicId: userPublicId, username: "testuser")
             def url = "https://example.com/product"
             def targetPrice = new BigDecimal("1500.00")
             def scrapedProduct = new ScrapedProduct(
@@ -50,13 +46,14 @@ class PriceAlertServiceSpec extends Specification {
                     Currency.getInstance("PLN"),
                     "Test Shop",
                     URI.create("http://favicon.url"))
-            def user = new UserEntity(publicId: this.userPublicId, username: "testuser")
+            def user = new UserEntity(publicId: userPublicId, username: "testuser")
             def product = new ProductEntity(productUrl: url, name: "Test Product")
 
+        this.userService.getUserEntity(userPublicId) >> testUser
             this.productService.getOrCreateProduct(url, scrapedProduct) >> product
 
         when:
-            this.service.createPriceAlert(url, targetPrice, scrapedProduct, this.userPublicId)
+            this.service.createPriceAlert(url, targetPrice, scrapedProduct, userPublicId)
 
         then:
             1 * this.priceAlertRepository.save({ alert ->
@@ -69,6 +66,8 @@ class PriceAlertServiceSpec extends Specification {
 
     def "Should throw E014 when price alert already exists"() {
         given:
+            def userPublicId = UUID.randomUUID()
+            def testUser = new UserEntity(publicId: userPublicId, username: "testuser")
             def url = "https://example.com/product"
             def targetPrice = new BigDecimal("1500.00")
             def scrapedProduct = new ScrapedProduct(
@@ -80,11 +79,12 @@ class PriceAlertServiceSpec extends Specification {
                     URI.create("http://favicon.url"))
             def product = new ProductEntity(productUrl: url, name: "Test Product")
 
+            this.userService.getUserEntity(userPublicId) >> testUser
             this.productService.getOrCreateProduct(url, scrapedProduct) >> product
-            this.priceAlertRepository.existsByUserAndProduct(this.testUser, product) >> true
+            this.priceAlertRepository.existsByUserAndProduct(testUser, product) >> true
 
         when:
-            this.service.createPriceAlert(url, targetPrice, scrapedProduct, this.userPublicId)
+            this.service.createPriceAlert(url, targetPrice, scrapedProduct, userPublicId)
 
         then:
             def e = thrown(PmRuntimeException)
@@ -94,16 +94,19 @@ class PriceAlertServiceSpec extends Specification {
 
     def "Should return paginated price alerts"() {
         given:
-            def user = new UserEntity(publicId: this.userPublicId, username: "testuser")
+            def userPublicId = UUID.randomUUID()
+            def testUser = new UserEntity(publicId: userPublicId, username: "testuser")
             def pageable = PageRequest.of(0, 20)
             def alertEntity = new PriceAlertEntity()
             def entitiesPage = new PageImpl<>([alertEntity], pageable, 1)
 
+            this.userService.getUserEntity(userPublicId) >> testUser
+
         when:
-            def result = this.service.getPriceAlerts(pageable, null, this.userPublicId)
+            def result = this.service.getPriceAlerts(pageable, null, userPublicId)
 
         then:
-            1 * priceAlertRepository.findByUser(user, pageable) >> entitiesPage
+            1 * priceAlertRepository.findByUser(testUser, pageable) >> entitiesPage
             0 * priceAlertRepository.findByUserAndProductNameContainingIgnoreCase(_, _, _)
 
             result instanceof PriceAlertPage
@@ -113,7 +116,8 @@ class PriceAlertServiceSpec extends Specification {
 
     def "Should return filtered price alerts when search term is provided"() {
         given:
-            def user = new UserEntity(publicId: this.userPublicId, username: "testuser")
+            def userPublicId = UUID.randomUUID()
+            def testUser = new UserEntity(publicId: userPublicId, username: "testuser")
             def searchTerm = "Test"
             def product = ProductEntity.builder()
                     .id(1L)
@@ -123,13 +127,15 @@ class PriceAlertServiceSpec extends Specification {
             def alertEntity = new PriceAlertEntity()
             alertEntity.setProduct(product)
             def filteredPage = new PageImpl<PriceAlertEntity>([alertEntity], pageable, 1)
-            this.priceAlertRepository.findByUserAndProductNameContainingIgnoreCase(user, searchTerm, pageable) >> filteredPage
+
+            this.userService.getUserEntity(userPublicId) >> testUser
+            this.priceAlertRepository.findByUserAndProductNameContainingIgnoreCase(testUser, searchTerm, pageable) >> filteredPage
 
         when:
-            def result = this.service.getPriceAlerts(pageable, searchTerm, this.userPublicId)
+            def result = this.service.getPriceAlerts(pageable, searchTerm, userPublicId)
 
         then:
-            1 * priceAlertRepository.findByUserAndProductNameContainingIgnoreCase(user, searchTerm, pageable) >> filteredPage
+            1 * priceAlertRepository.findByUserAndProductNameContainingIgnoreCase(testUser, searchTerm, pageable) >> filteredPage
             0 * priceAlertRepository.findByUser(_, _)
 
             result instanceof PriceAlertPage
@@ -140,19 +146,83 @@ class PriceAlertServiceSpec extends Specification {
 
     def "Should return empty PriceAlertPage when search term matches nothing"() {
         given:
-            def user = new UserEntity(publicId: this.userPublicId, username: "testuser")
+            def userPublicId = UUID.randomUUID()
+            def testUser = new UserEntity(publicId: userPublicId, username: "testuser")
             def searchTerm = "nonexistent"
             def pageable = PageRequest.of(0, 20)
             def emptyPage = new PageImpl<PriceAlertEntity>([], pageable, 0)
-            this.priceAlertRepository.findByUserAndProductNameContainingIgnoreCase(user, searchTerm, pageable) >> emptyPage
+
+        this.userService.getUserEntity(userPublicId) >> testUser
+        this.priceAlertRepository.findByUserAndProductNameContainingIgnoreCase(testUser, searchTerm, pageable) >> emptyPage
 
         when:
-            def result = this.service.getPriceAlerts(pageable, searchTerm, this.userPublicId)
+            def result = this.service.getPriceAlerts(pageable, searchTerm, userPublicId)
 
         then:
             result instanceof PriceAlertPage
             result.content.isEmpty()
             result.totalElements == 0
+    }
+
+    def "Should successfully toggle price alert status from #initialState to #expectedState"() {
+        given:
+            def alertPublicId = UUID.randomUUID()
+            def alertEntity = new PriceAlertEntity(active: initialState)
+            def request = new UpdatePriceAlertRequest(!initialState, null)
+
+        when:
+            def result = this.service.updatePriceAlert(alertPublicId, request)
+
+        then:
+            1 * this.priceAlertRepository.findByPublicId(alertPublicId) >> Optional.of(alertEntity)
+            alertEntity.getActive() == expectedState
+            result != null
+            result.active() == expectedState
+
+        where:
+            initialState | expectedState
+            true         | false
+            false        | true
+    }
+
+    def "Should update target price successfully"() {
+        given:
+            def alertPublicId = UUID.randomUUID()
+            def oldPrice = new BigDecimal(39.99)
+            def newPrice = new BigDecimal(29.99)
+            def alertEntity = new PriceAlertEntity(targetPrice: oldPrice)
+            def request = new UpdatePriceAlertRequest(null, newPrice)
+
+        when:
+            this.service.updatePriceAlert(alertPublicId, request)
+
+        then:
+            1 * this.priceAlertRepository.findByPublicId(alertPublicId) >> Optional.of(alertEntity)
+            alertEntity.getTargetPrice() == newPrice
+    }
+
+    def "Should throw E015 when toggling status of non-existent price alert"() {
+        given:
+            def alertPublicId = UUID.randomUUID()
+
+        when:
+            this.service.updatePriceAlert(alertPublicId, null)
+
+        then:
+            1 * this.priceAlertRepository.findByPublicId(alertPublicId) >> Optional.empty()
+            def e = thrown(PmRuntimeException)
+            e.getCode() == ExceptionCode.E015
+    }
+
+    def "Should delete price alert properly"() {
+        given:
+            def alertPublicId = UUID.randomUUID()
+
+        when:
+            this.service.deletePriceAlert(alertPublicId)
+
+        then:
+            1 * this.priceAlertRepository.deleteByPublicId(alertPublicId)
     }
 
 }

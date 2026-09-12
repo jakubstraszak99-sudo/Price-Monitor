@@ -1,8 +1,10 @@
 package com.github.pricemonitor.api.resource;
 
 import com.github.pricemonitor.api.PriceAlertApi;
+import com.github.pricemonitor.model.dto.PriceAlert;
 import com.github.pricemonitor.model.page.PriceAlertPage;
 import com.github.pricemonitor.model.request.alert.CreatePriceAlertRequest;
+import com.github.pricemonitor.model.request.alert.UpdatePriceAlertRequest;
 import com.github.pricemonitor.service.PriceAlertService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
@@ -28,6 +30,18 @@ public class PriceAlertResource implements PriceAlertApi {
     public ResponseEntity<PriceAlertPage> getAlerts(final Pageable pageable, final String search, final UUID userPublicId) {
         final PriceAlertPage page = this.priceAlertService.getPriceAlerts(pageable, search, userPublicId);
         return ResponseEntity.status(HttpStatus.OK).body(page);
+    }
+
+    @Override
+    public ResponseEntity<PriceAlert> updatePriceAlert(final UUID alertPublicId, final UpdatePriceAlertRequest request) {
+        final PriceAlert alert = this.priceAlertService.updatePriceAlert(alertPublicId, request);
+        return ResponseEntity.status(HttpStatus.OK).body(alert);
+    }
+
+    @Override
+    public ResponseEntity<Void> deletePriceAlert(UUID alertPublicId) {
+        this.priceAlertService.deletePriceAlert(alertPublicId);
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 
 }

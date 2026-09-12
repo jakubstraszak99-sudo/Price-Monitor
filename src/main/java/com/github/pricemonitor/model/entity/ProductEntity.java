@@ -39,7 +39,7 @@ public class ProductEntity extends BaseEntity {
     private LocalDateTime lastUpdated;
 
     @Column
-    private String domain;
+    private String shop;
 
     @Column(length = 1000)
     private String faviconUrl;

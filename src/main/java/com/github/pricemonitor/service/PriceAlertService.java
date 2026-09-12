@@ -1,7 +1,9 @@
 package com.github.pricemonitor.service;
 
+import com.github.pricemonitor.model.dto.PriceAlert;
 import com.github.pricemonitor.model.dto.ScrapedProduct;
 import com.github.pricemonitor.model.page.PriceAlertPage;
+import com.github.pricemonitor.model.request.alert.UpdatePriceAlertRequest;
 import org.springframework.data.domain.Pageable;
 
 import java.math.BigDecimal;
@@ -17,5 +19,9 @@ public interface PriceAlertService {
     PriceAlertPage getPriceAlerts(final Pageable pageable,
                                   final String search,
                                   final UUID userPublicId);
+
+    PriceAlert updatePriceAlert(final UUID alertPublicId, final UpdatePriceAlertRequest request);
+
+    void deletePriceAlert(final UUID alertPublicId);
 
 }

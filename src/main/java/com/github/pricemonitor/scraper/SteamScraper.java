@@ -73,7 +73,7 @@ public class SteamScraper extends ShopScraper {
     }
 
     @Override
-    protected String extractDomain(final String url) {
+    protected String extractShop(final String url) {
         return SHOP_NAME;
     }
 
