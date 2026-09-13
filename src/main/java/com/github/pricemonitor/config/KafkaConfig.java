@@ -49,47 +49,63 @@ public class KafkaConfig {
 
     @Bean
     public ConsumerFactory<String, KafkaMessage> emailConsumerFactory() {
-        Map<String, Object> props = baseConsumerProps(EMAIL_SENDER_GROUP);
-        props.put(JacksonJsonDeserializer.VALUE_DEFAULT_TYPE, EmailNotificationMessage.class);
-        return new DefaultKafkaConsumerFactory<>(props);
+        return consumerFactory(EMAIL_SENDER_GROUP, EmailNotificationMessage.class);
     }
 
     @Bean
     public ConsumerFactory<String, KafkaMessage> scraperReplyConsumerFactory() {
-        Map<String, Object> props = baseConsumerProps(SCRAPER_REPLY_GROUP);
-        props.put(JacksonJsonDeserializer.VALUE_DEFAULT_TYPE, ScraperReplyMessage.class);
-        return new DefaultKafkaConsumerFactory<>(props);
+        return consumerFactory(SCRAPER_REPLY_GROUP, ScraperReplyMessage.class);
     }
 
     @Bean
     public ConsumerFactory<String, KafkaMessage> scraperRequestConsumerFactory() {
-        Map<String, Object> props = baseConsumerProps(SCRAPER_REQUEST_GROUP);
-        props.put(JacksonJsonDeserializer.VALUE_DEFAULT_TYPE, ScraperRequestMessage.class);
-        return new DefaultKafkaConsumerFactory<>(props);
+        return consumerFactory(SCRAPER_REQUEST_GROUP, ScraperRequestMessage.class);
+    }
+
+    @Bean
+    public ConsumerFactory<String, KafkaMessage> scraperSyncReplyConsumerFactory() {
+        return consumerFactory(SCRAPER_SYNC_REPLY_GROUP, ScraperReplyMessage.class);
     }
 
     @Bean
     public ConcurrentKafkaListenerContainerFactory<String, KafkaMessage> emailKafkaListenerContainerFactory(
             final ConsumerFactory<String, KafkaMessage> emailConsumerFactory) {
-        final ConcurrentKafkaListenerContainerFactory<String, KafkaMessage> factory = new ConcurrentKafkaListenerContainerFactory<>();
-        factory.setConsumerFactory(emailConsumerFactory);
-        return factory;
+        return containerFactory(emailConsumerFactory);
+    }
+
+    @Bean
+    public ConcurrentKafkaListenerContainerFactory<String, KafkaMessage> scraperReplyContainerFactory(
+            final ConsumerFactory<String, KafkaMessage> scraperReplyConsumerFactory) {
+        return containerFactory(scraperReplyConsumerFactory);
     }
 
     @Bean
     public ConcurrentMessageListenerContainer<String, KafkaMessage> replyContainer(
-            final ConsumerFactory<String, KafkaMessage> scraperReplyConsumerFactory) {
-        final ContainerProperties containerProperties = new ContainerProperties(SCRAPER_REPLY_TOPIC);
-        return new ConcurrentMessageListenerContainer<>(scraperReplyConsumerFactory, containerProperties);
+            final ConsumerFactory<String, KafkaMessage> scraperSyncReplyConsumerFactory) {
+        final ContainerProperties containerProperties = new ContainerProperties(SCRAPER_SYNC_REPLY_TOPIC);
+        return new ConcurrentMessageListenerContainer<>(scraperSyncReplyConsumerFactory, containerProperties);
     }
 
     @Bean
     public ConcurrentKafkaListenerContainerFactory<String, KafkaMessage> scraperRequestContainerFactory(
             final ConsumerFactory<String, KafkaMessage> scraperRequestConsumerFactory,
-            final KafkaTemplate<String, KafkaMessage> kafkaTemplate) {
+            final ProducerFactory<String, KafkaMessage> producerFactory) {
+        final ConcurrentKafkaListenerContainerFactory<String, KafkaMessage> factory = containerFactory(scraperRequestConsumerFactory);
+        final KafkaTemplate<String, KafkaMessage> replyTemplate = new KafkaTemplate<>(producerFactory);
+        replyTemplate.setDefaultTopic(SCRAPER_REPLY_TOPIC);
+        factory.setReplyTemplate(replyTemplate);
+        return factory;
+    }
+
+    private ConsumerFactory<String, KafkaMessage> consumerFactory(final String groupId, final Class<? extends KafkaMessage> defaultType) {
+        final Map<String, Object> props = baseConsumerProps(groupId);
+        props.put(JacksonJsonDeserializer.VALUE_DEFAULT_TYPE, defaultType);
+        return new DefaultKafkaConsumerFactory<>(props);
+    }
+
+    private ConcurrentKafkaListenerContainerFactory<String, KafkaMessage> containerFactory(final ConsumerFactory<String, KafkaMessage> consumerFactory) {
         final ConcurrentKafkaListenerContainerFactory<String, KafkaMessage> factory = new ConcurrentKafkaListenerContainerFactory<>();
-        factory.setConsumerFactory(scraperRequestConsumerFactory);
-        factory.setReplyTemplate(kafkaTemplate);
+        factory.setConsumerFactory(consumerFactory);
         return factory;
     }
 

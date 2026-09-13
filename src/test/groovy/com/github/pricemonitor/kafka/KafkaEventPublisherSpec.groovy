@@ -5,12 +5,17 @@ import com.github.pricemonitor.exception.PmRuntimeException
 import com.github.pricemonitor.kafka.message.KafkaMessage
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.kafka.clients.producer.ProducerRecord
+import org.apache.kafka.clients.producer.RecordMetadata
+import org.apache.kafka.common.TopicPartition
 import org.springframework.kafka.core.KafkaTemplate
 import org.springframework.kafka.requestreply.ReplyingKafkaTemplate
 import org.springframework.kafka.requestreply.RequestReplyFuture
+import org.springframework.kafka.support.KafkaHeaders
+import org.springframework.kafka.support.SendResult
 import spock.lang.Specification
 import spock.lang.Subject
 
+import java.nio.charset.StandardCharsets
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ExecutionException
 
@@ -28,13 +33,39 @@ class KafkaEventPublisherSpec extends Specification {
 
     def "Should publish event properly"() {
         given:
-            def future = CompletableFuture.completedFuture(null)
+            def sendResult = new SendResult<>(
+                    new ProducerRecord<>(this.topic, this.identifier, this.event),
+                    new RecordMetadata(new TopicPartition(this.topic, 0), 0L, 0, 0, 0, 0)
+            )
+            def future = CompletableFuture.completedFuture(sendResult)
 
         when:
             this.publisher.publish(this.topic, this.identifier, this.event)
 
         then:
-            1 * this.template.send(this.topic, this.identifier, this.event) >> future
+            1 * this.template.send({ ProducerRecord record ->
+                record.topic() == this.topic && record.key() == this.identifier && record.value() == this.event
+                        && record.headers().lastHeader(KafkaHeaders.REPLY_TOPIC) == null
+            }) >> future
+    }
+
+    def "Should publish event with reply topic header"() {
+        given:
+            def replyTopic = "test-reply-topic"
+            def sendResult = new SendResult<>(
+                    new ProducerRecord<>(this.topic, this.identifier, this.event),
+                    new RecordMetadata(new TopicPartition(this.topic, 0), 0L, 0, 0, 0, 0)
+            )
+            def future = CompletableFuture.completedFuture(sendResult)
+
+        when:
+            this.publisher.publish(this.topic, this.identifier, this.event, replyTopic)
+
+        then:
+            1 * this.template.send({ ProducerRecord record ->
+                record.topic() == this.topic && record.key() == this.identifier && record.value() == this.event
+                        && record.headers().lastHeader(KafkaHeaders.REPLY_TOPIC).value() == replyTopic.getBytes(StandardCharsets.UTF_8)
+            }) >> future
     }
 
     def "Should publish and receive reply properly"() {
@@ -64,7 +95,6 @@ class KafkaEventPublisherSpec extends Specification {
         then:
             1 * this.replyingTemplate.sendAndReceive(_) >> future
             1 * future.get() >> { throw new ExecutionException("Kafka Timeout", new RuntimeException()) }
-
             def e = thrown(PmRuntimeException)
             e.getCode() == ExceptionCode.E013
     }

@@ -13,4 +13,8 @@ public interface ProductService {
 
     ProductPage getProducts(final Pageable pageable, final String search);
 
+    void updateProductPrice(final String productUrl, final ScrapedProduct scrapedProduct);
+
+    void requestPriceCheck(final String url);
+
 }

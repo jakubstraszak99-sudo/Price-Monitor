@@ -62,8 +62,8 @@ class AuthServiceSpec extends Specification {
                     .username(this.username)
                     .verified(false)
                     .build()
-        this.userRepository.findByUsernameOrEmail(this.username, this.email) >> Optional.of(unverifiedUser)
-        this.passwordEncoder.encode(this.password) >> this.passwordHash
+            this.userRepository.findByUsernameOrEmail(this.username, this.email) >> Optional.of(unverifiedUser)
+            this.passwordEncoder.encode(this.password) >> this.passwordHash
             this.tokenProvider.generateVerificationToken(_ as UUID) >> this.token
 
         when:

@@ -1,13 +1,13 @@
 package com.github.pricemonitor.service
 
 import com.github.pricemonitor.properties.AppProperties
-import com.github.pricemonitor.service.impl.EmailServiceImpl
+import com.github.pricemonitor.service.impl.NotificationServiceImpl
 import jakarta.mail.internet.MimeMessage
 import org.springframework.mail.javamail.JavaMailSender
 import spock.lang.Specification
 import spock.lang.Subject
 
-class EmailServiceSpec extends Specification {
+class NotificationServiceSpec extends Specification {
 
     def mailSender = Mock(JavaMailSender)
     def fromAddress = "noreply@pricemonitor.com"
@@ -17,7 +17,7 @@ class EmailServiceSpec extends Specification {
     def appProperties = new AppProperties(new AppProperties.Mail(this.fromAddress), null, this.appUrl)
 
     @Subject
-    def service = new EmailServiceImpl(this.mailSender, this.appProperties)
+    def service = new NotificationServiceImpl(this.mailSender, this.appProperties)
 
     def "Should successfully send verification email"() {
         given:

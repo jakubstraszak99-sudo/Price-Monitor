@@ -21,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Optional;
 
 import static com.github.pricemonitor.exception.ExceptionCode.E011;
+import static com.github.pricemonitor.utils.KafkaUtil.SCRAPER_REPLY_TOPIC;
 import static com.github.pricemonitor.utils.KafkaUtil.SCRAPER_REQUEST_TOPIC;
 
 @Slf4j
@@ -42,7 +43,7 @@ public class ProductServiceImpl implements ProductService {
     public ScrapedProduct getProductInfo(final String url) {
         return this.findProduct(url)
                 .map(product -> {
-                    log.info("Product found in database: {}", url);
+                    log.debug("Product found in database: {}", url);
                     return this.productMapper.mapToScrapedProduct(product);
                 }).orElseGet(() -> this.fetchFromUrl(url));
     }
@@ -55,6 +56,23 @@ public class ProductServiceImpl implements ProductService {
                 : this.productRepository.findAll(pageable);
         final Page<Product> page = products.map(this.productMapper::map);
         return new ProductPage(page.getContent(), pageable, page.getTotalElements());
+    }
+
+    @Override
+    @Transactional
+    public void updateProductPrice(final String productUrl, final ScrapedProduct scrapedProduct) {
+        this.productRepository.findByProductUrl(productUrl).ifPresent(product -> {
+            if (scrapedProduct.price().compareTo(product.getCurrentPrice()) != 0) {
+                log.debug("Price update for {}: old={}, new={}", productUrl, product.getCurrentPrice(), scrapedProduct.price());
+                product.setCurrentPrice(scrapedProduct.price());
+            }
+        });
+    }
+
+    @Override
+    public void requestPriceCheck(final String url) {
+        final ScraperRequestMessage message = new ScraperRequestMessage(url);
+        this.kafkaEventPublisher.publish(SCRAPER_REQUEST_TOPIC, url, message, SCRAPER_REPLY_TOPIC);
     }
 
     private Optional<ProductEntity> findProduct(final String url) {

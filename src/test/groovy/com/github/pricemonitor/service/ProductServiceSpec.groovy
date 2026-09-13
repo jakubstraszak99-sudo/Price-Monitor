@@ -10,10 +10,13 @@ import com.github.pricemonitor.model.mapper.ProductMapperImpl
 import com.github.pricemonitor.model.page.ProductPage
 import com.github.pricemonitor.repository.ProductRepository
 import com.github.pricemonitor.service.impl.ProductServiceImpl
+import com.github.pricemonitor.utils.KafkaUtil
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.PageRequest
 import spock.lang.Specification
 import spock.lang.Subject
+
+import static com.github.pricemonitor.utils.KafkaUtil.SCRAPER_REPLY_TOPIC
 
 class ProductServiceSpec extends Specification {
 
@@ -89,7 +92,7 @@ class ProductServiceSpec extends Specification {
     def "Should fetch from Kafka when product is not in database"() {
         given:
             this.productRepository.findByProductUrl(this.url) >> Optional.empty()
-            def replyMessage = new ScraperReplyMessage(this.scrapedData, true, null)
+            def replyMessage = new ScraperReplyMessage(this.url, this.scrapedData, true, null)
 
         when:
             def result = this.service.getProductInfo(this.url)
@@ -102,7 +105,7 @@ class ProductServiceSpec extends Specification {
     def "Should throw exception when Kafka returns failure"() {
         given:
             this.productRepository.findByProductUrl(this.url) >> Optional.empty()
-            def replyMessage = new ScraperReplyMessage(this.scrapedData, false, "error")
+            def replyMessage = new ScraperReplyMessage(this.url, this.scrapedData, false, "error")
 
         when:
             this.service.getProductInfo(this.url)
@@ -116,7 +119,7 @@ class ProductServiceSpec extends Specification {
     def "Should throw exception when Kafka returns success but scrapedProduct is null"() {
         given:
             this.productRepository.findByProductUrl(this.url) >> Optional.empty()
-            def replyMessage = new ScraperReplyMessage(null, true, null)
+            def replyMessage = new ScraperReplyMessage(this.url, null, true, null)
 
         when:
             this.service.getProductInfo(this.url)
@@ -224,8 +227,40 @@ class ProductServiceSpec extends Specification {
             this.service.getProducts(pageable, "   ")
 
         then:
-        1 * this.productRepository.findAll(pageable) >> entityPage
-        0 * this.productRepository.findByNameContainingIgnoreCase(_, _)
+            1 * this.productRepository.findAll(pageable) >> entityPage
+            0 * this.productRepository.findByNameContainingIgnoreCase(_, _)
+    }
+
+    def "Should update product price when scraped price is different"() {
+        given:
+            def existingProduct = new ProductEntity(productUrl: this.url, currentPrice: new BigDecimal("200.00"))
+            this.productRepository.findByProductUrl(this.url) >> Optional.of(existingProduct)
+
+        when:
+            this.service.updateProductPrice(this.url, this.scrapedData)
+
+        then:
+            existingProduct.currentPrice == this.price
+    }
+
+    def "Should not update product price when scraped price is identical"() {
+        given:
+            def existingProduct = new ProductEntity(productUrl: this.url, currentPrice: this.price)
+            this.productRepository.findByProductUrl(this.url) >> Optional.of(existingProduct)
+
+        when:
+            this.service.updateProductPrice(this.url, this.scrapedData)
+
+        then:
+            existingProduct.currentPrice == this.price
+    }
+
+    def "Should publish async request for price check"() {
+        when:
+            this.service.requestPriceCheck(this.url)
+
+        then:
+            1 * this.kafkaEventPublisher.publish(KafkaUtil.SCRAPER_REQUEST_TOPIC, this.url, { request -> request.url() == this.url }, SCRAPER_REPLY_TOPIC)
     }
 
 }
