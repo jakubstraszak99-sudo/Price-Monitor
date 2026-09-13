@@ -3,6 +3,7 @@ package com.github.pricemonitor.model.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -35,6 +36,7 @@ public class ProductEntity extends BaseEntity {
     @Column(length = 3)
     private Currency currency;
 
+    @UpdateTimestamp
     @Column(nullable = false)
     private LocalDateTime lastUpdated;
 

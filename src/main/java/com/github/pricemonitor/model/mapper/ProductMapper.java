@@ -19,10 +19,10 @@ public interface ProductMapper {
     @Mapping(target = "createdAt", ignore = true)
     ProductEntity map(final Product product);
 
-    @Mapping(target = "id", ignore = true)
     @Mapping(target = "productUrl", source = "url")
     @Mapping(target = "currentPrice", source = "data.price")
-    @Mapping(target = "lastUpdated", expression = "java(LocalDateTime.now())")
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "lastUpdated", ignore = true)
     @Mapping(target = "priceHistories", ignore = true)
     @Mapping(target = "priceAlerts", ignore = true)
     @Mapping(target = "createdAt", ignore = true)

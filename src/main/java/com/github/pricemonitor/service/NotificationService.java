@@ -1,6 +1,6 @@
 package com.github.pricemonitor.service;
 
-public interface EmailService {
+public interface NotificationService {
 
     void sendVerificationEmail(final String to, final String token);
 

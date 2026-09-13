@@ -38,6 +38,7 @@ logging:
     org.apache.kafka: WARN
     org.hibernate.SQL: DEBUG
     org.springframework.security: DEBUG
+    com.github.pricemonitor: DEBUG
 
 app:
   mail:

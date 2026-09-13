@@ -1,7 +1,7 @@
 package com.github.pricemonitor.service.impl;
 
 import com.github.pricemonitor.properties.AppProperties;
-import com.github.pricemonitor.service.EmailService;
+import com.github.pricemonitor.service.NotificationService;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
@@ -16,7 +16,7 @@ import static com.github.pricemonitor.utils.AuthenticationUtil.VERIFICATION_TOKE
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class EmailServiceImpl implements EmailService {
+public class NotificationServiceImpl implements NotificationService {
 
     private static final String VERIFICATION_SUBJECT = "Price Monitor - Account Verification";
     private static final String PASSWORD_RESET_SUBJECT = "Price Monitor - Password Reset Request";
@@ -63,7 +63,7 @@ public class EmailServiceImpl implements EmailService {
     public void sendVerificationEmail(final String to, final String token) {
         final String htmlContent = VERIFICATION_TEMPLATE.formatted(this.buildLink(VERIFICATION_TOKEN_PATH, token));
         this.sendEmail(to, VERIFICATION_SUBJECT, htmlContent);
-        log.info("Verification email sent to: {}", to);
+        log.debug("Verification email sent to: {}", to);
     }
 
 
@@ -71,7 +71,7 @@ public class EmailServiceImpl implements EmailService {
     public void sendPasswordResetEmail(final String to, final String token) {
         final String htmlContent = PASSWORD_RESET_TEMPLATE.formatted(this.buildLink(PASSWORD_RESET_PATH, token));
         this.sendEmail(to, PASSWORD_RESET_SUBJECT, htmlContent);
-        log.info("Password reset email sent to: {}", to);
+        log.debug("Password reset email sent to: {}", to);
     }
 
     private void sendEmail(final String to, final String subject, final String htmlContent) {
