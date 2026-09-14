@@ -69,7 +69,7 @@ public interface PriceAlertApi {
     })
     @PatchMapping("/{publicId}")
     ResponseEntity<PriceAlert> updatePriceAlert(
-            @PathVariable("publicId") final UUID publicId,
+            @PathVariable("publicId") final UUID alertPublicId,
             @RequestBody @Valid final UpdatePriceAlertRequest request
     );
 

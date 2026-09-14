@@ -14,6 +14,10 @@ import java.util.stream.Stream;
 @Component
 public class GenericScraper extends ShopScraper {
 
+    private static final String CONTENT_ATTR = "content";
+    private static final String PRICE_CURRENCY_LABEL_1 = "meta[property=product:price:currency]";
+    private static final String PRICE_CURRENCY_LABEL_2 = "meta[itemprop=priceCurrency]";
+
     public GenericScraper(final WebDriverConfig webDriverConfig) {
         super(webDriverConfig);
     }
@@ -25,10 +29,10 @@ public class GenericScraper extends ShopScraper {
 
     @Override
     protected Currency extractCurrency(final Document doc) {
-        return Stream.of("meta[property=product:price:currency]", "meta[itemprop=priceCurrency]")
+        return Stream.of(PRICE_CURRENCY_LABEL_1, PRICE_CURRENCY_LABEL_2)
                 .map(doc::selectFirst)
                 .filter(Objects::nonNull)
-                .map(element -> element.attr("content"))
+                .map(element -> element.attr(CONTENT_ATTR))
                 .filter(StringUtils::isNotBlank)
                 .findFirst()
                 .map(Currency::getInstance)

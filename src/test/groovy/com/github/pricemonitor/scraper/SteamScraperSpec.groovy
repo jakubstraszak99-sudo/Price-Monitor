@@ -65,8 +65,7 @@ class SteamScraperSpec extends Specification {
             "<html><body><div class='game_purchase_price'>49,99€</div></body></html>"    || "EUR"
             "<html><body><div class='game_purchase_price'>19.99\$</div></body></html>"   || "USD"
             "<html><body><div class='game_purchase_price'>10.00£</div></body></html>"    || "GBP"
-            "<html><body><div class='game_purchase_price'>10.00 CHF</div></body></html>" || "CHF"
-            "<html><body><div class='game_purchase_price'>100 SEK</div></body></html>"   || "SEK"
+            "<html><body><div class='game_purchase_price'>10.00 kr</div></body></html>"  || "SEK"
             "<html><body>1 NSC (Not supported currency)</body></html>"                   || "PLN"
     }
 

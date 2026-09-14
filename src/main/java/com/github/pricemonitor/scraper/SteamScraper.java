@@ -29,15 +29,6 @@ public class SteamScraper extends ShopScraper {
     private static final String FREE_LABEL = "Free";
     private static final String FREE_PRICE_VALUE = "0.00";
 
-    private static final Map<String, String> CURRENCY_SYMBOLS = Map.of(
-            "zł", "PLN",
-            "€", "EUR",
-            "$", "USD",
-            "£", "GBP",
-            "CHF", "CHF",
-            "SEK", "SEK"
-    );
-
     public SteamScraper(final WebDriverConfig webDriverConfig) {
         super(webDriverConfig);
     }
@@ -98,6 +89,7 @@ public class SteamScraper extends ShopScraper {
                 return Currency.getInstance(entry.getValue());
             }
         }
+
         return null;
     }
 

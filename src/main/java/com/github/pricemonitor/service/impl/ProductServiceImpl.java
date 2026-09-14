@@ -10,6 +10,7 @@ import com.github.pricemonitor.model.entity.ProductEntity;
 import com.github.pricemonitor.model.mapper.ProductMapper;
 import com.github.pricemonitor.model.page.ProductPage;
 import com.github.pricemonitor.repository.ProductRepository;
+import com.github.pricemonitor.service.PriceHistoryService;
 import com.github.pricemonitor.service.ProductService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,6 +33,7 @@ public class ProductServiceImpl implements ProductService {
     private final ProductRepository productRepository;
     private final ProductMapper productMapper;
     private final KafkaEventPublisher kafkaEventPublisher;
+    private final PriceHistoryService priceHistoryService;
 
     @Override
     @Transactional
@@ -65,6 +67,7 @@ public class ProductServiceImpl implements ProductService {
             if (scrapedProduct.price().compareTo(product.getCurrentPrice()) != 0) {
                 log.debug("Price update for {}: old={}, new={}", productUrl, product.getCurrentPrice(), scrapedProduct.price());
                 product.setCurrentPrice(scrapedProduct.price());
+                this.priceHistoryService.createPriceHistory(product, scrapedProduct.price());
             }
         });
     }
@@ -91,8 +94,10 @@ public class ProductServiceImpl implements ProductService {
     }
 
     private ProductEntity saveNewProduct(final String url, final ScrapedProduct data) {
-        final ProductEntity product = this.productMapper.map(data, url);
-        return this.productRepository.save(product);
+        final ProductEntity product = this.productRepository.save(this.productMapper.map(data, url));
+        this.priceHistoryService.createPriceHistory(product);
+
+        return product;
     }
 
 }

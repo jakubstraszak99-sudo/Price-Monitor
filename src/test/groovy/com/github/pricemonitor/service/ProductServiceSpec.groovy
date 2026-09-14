@@ -22,13 +22,15 @@ class ProductServiceSpec extends Specification {
 
     def productRepository = Mock(ProductRepository)
     def kafkaEventPublisher = Mock(KafkaEventPublisher)
+    def priceHistoryService = Mock(PriceHistoryService)
     def productMapper = new ProductMapperImpl()
 
     @Subject
     def service = new ProductServiceImpl(
             this.productRepository,
             this.productMapper,
-            this.kafkaEventPublisher
+            this.kafkaEventPublisher,
+            this.priceHistoryService
     )
 
     def url = "https://example.com/product"
@@ -52,6 +54,7 @@ class ProductServiceSpec extends Specification {
         then:
             result == existingProduct
             0 * this.productRepository.save(_)
+            0 * this.priceHistoryService.createPriceHistory(_)
     }
 
     def "Should save new product when not found in database"() {
@@ -67,6 +70,7 @@ class ProductServiceSpec extends Specification {
             def result = this.service.getOrCreateProduct(this.url, this.scrapedData)
 
         then:
+            1 * this.priceHistoryService.createPriceHistory(savedProduct)
             1 * this.productRepository.save({ entity ->
                 entity.productUrl == this.url &&
                         entity.name == "Test Product" &&
@@ -75,7 +79,7 @@ class ProductServiceSpec extends Specification {
             result == savedProduct
     }
 
-    def "Should return mapped ScrapedProduct directly from DB and skip Kafka"() {
+    def "Should return mapped ScrapedProduct directly from database and skip Kafka"() {
         given:
             def entity = new ProductEntity(productUrl: this.url, name: "Test Product DB", currentPrice: this.price)
             this.productRepository.findByProductUrl(this.url) >> Optional.of(entity)
@@ -240,6 +244,7 @@ class ProductServiceSpec extends Specification {
             this.service.updateProductPrice(this.url, this.scrapedData)
 
         then:
+            1 * this.priceHistoryService.createPriceHistory(*_)
             existingProduct.currentPrice == this.price
     }
 
@@ -252,6 +257,7 @@ class ProductServiceSpec extends Specification {
             this.service.updateProductPrice(this.url, this.scrapedData)
 
         then:
+            0 * this.priceHistoryService.createPriceHistory(*_)
             existingProduct.currentPrice == this.price
     }
 

@@ -19,6 +19,7 @@ import java.math.BigDecimal;
 import java.net.URI;
 import java.time.Duration;
 import java.util.Currency;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -38,8 +39,16 @@ public abstract class ShopScraper {
     private static final String PRICE_ITEMPROP_SELECTOR = "meta[itemprop=price]";
     private static final String CONTENT_ATTR = "content";
     private static final String ABS_HREF_ATTR = "abs:href";
-    private static final String DEFAULT_CURRENCY_CODE = "PLN";
+    private static final String DEFAULT_CURRENCY_KEY = "zł";
     private static final String GOOGLE_FAVICON_URL_TEMPLATE = "https://www.google.com/s2/favicons?domain=%s&sz=64";
+
+    protected static final Map<String, String> CURRENCY_SYMBOLS = Map.of(
+            "zł", "PLN",
+            "€", "EUR",
+            "$", "USD",
+            "£", "GBP",
+            "kr", "SEK"
+    );
 
     private final WebDriverConfig webDriverConfig;
 
@@ -87,7 +96,7 @@ public abstract class ShopScraper {
     }
 
     protected Currency extractCurrency(final Document doc) {
-        return Currency.getInstance(DEFAULT_CURRENCY_CODE);
+        return Currency.getInstance(CURRENCY_SYMBOLS.get(DEFAULT_CURRENCY_KEY));
     }
 
     protected String extractShop(final String url) {

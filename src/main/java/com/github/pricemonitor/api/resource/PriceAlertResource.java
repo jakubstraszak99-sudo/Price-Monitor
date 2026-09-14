@@ -39,7 +39,7 @@ public class PriceAlertResource implements PriceAlertApi {
     }
 
     @Override
-    public ResponseEntity<Void> deletePriceAlert(UUID alertPublicId) {
+    public ResponseEntity<Void> deletePriceAlert(final UUID alertPublicId) {
         this.priceAlertService.deletePriceAlert(alertPublicId);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }

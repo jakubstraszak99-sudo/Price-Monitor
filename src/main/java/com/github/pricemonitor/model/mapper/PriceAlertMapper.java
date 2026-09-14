@@ -19,11 +19,6 @@ public interface PriceAlertMapper {
 
     PriceAlert map(final PriceAlertEntity entity);
 
-    @Mapping(target = "id", ignore = true)
-    @Mapping(target = "user", ignore = true)
-    @Mapping(target = "product", ignore = true)
-    PriceAlertEntity map(final PriceAlert alert);
-
     @Mapping(target = "user", source = "user")
     @Mapping(target = "product", source = "product")
     @Mapping(target = "targetPrice", source = "targetPrice")

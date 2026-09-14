@@ -5,5 +5,5 @@ import java.time.LocalDateTime;
 
 public record PriceHistory(
         BigDecimal recordedPrice,
-        LocalDateTime timestamp
+        LocalDateTime createdAt
 ) {}

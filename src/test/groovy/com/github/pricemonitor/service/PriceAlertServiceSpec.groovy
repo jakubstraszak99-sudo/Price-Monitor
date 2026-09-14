@@ -180,9 +180,9 @@ class PriceAlertServiceSpec extends Specification {
             result.active() == expectedState
 
         where:
-            initialState | expectedState
-            true         | false
-            false        | true
+            initialState || expectedState
+            true         || false
+            false        || true
     }
 
     def "Should update target price successfully"() {

@@ -5,10 +5,13 @@ import com.github.pricemonitor.model.request.password.ForgotPasswordRequest;
 import com.github.pricemonitor.model.request.password.ResetPasswordRequest;
 import com.github.pricemonitor.model.request.password.UpdatePasswordRequest;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -21,8 +24,19 @@ public interface UserApi {
 
     @Operation(summary = "Get user", description = "Fetches user data")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "User data retrieved successfully"),
-            @ApiResponse(responseCode = "401", description = "Unauthorized")
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "User data retrieved successfully",
+                    content = @Content(
+                            mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = User.class)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "Unauthorized",
+                    content = @Content(schema = @Schema())
+            )
     })
     @GetMapping
     ResponseEntity<User> getUser(@AuthenticationPrincipal final UUID userPublicId);

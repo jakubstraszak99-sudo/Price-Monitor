@@ -9,6 +9,6 @@ import java.util.List;
 @Repository
 public interface PriceHistoryRepository extends JpaRepository<PriceHistoryEntity, Long> {
 
-    List<PriceHistoryEntity> findAllByProductIdOrderByTimestampDesc(final Long productId);
+    List<PriceHistoryEntity> findByProductProductUrl(final String productUrl);
 
 }
