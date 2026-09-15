@@ -27,6 +27,12 @@ public class PriceAlertResource implements PriceAlertApi {
     }
 
     @Override
+    public ResponseEntity<Boolean> checkAlertExists(final String productUrl, final UUID userPublicId) {
+        final boolean result = this.priceAlertService.checkAlertExists(userPublicId, productUrl);
+        return ResponseEntity.status(HttpStatus.OK).body(result);
+    }
+
+    @Override
     public ResponseEntity<PriceAlertPage> getAlerts(final Pageable pageable, final String search, final UUID userPublicId) {
         final PriceAlertPage page = this.priceAlertService.getPriceAlerts(pageable, search, userPublicId);
         return ResponseEntity.status(HttpStatus.OK).body(page);

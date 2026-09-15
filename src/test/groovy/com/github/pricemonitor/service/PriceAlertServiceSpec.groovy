@@ -46,10 +46,9 @@ class PriceAlertServiceSpec extends Specification {
                     Currency.getInstance("PLN"),
                     "Test Shop",
                     URI.create("http://favicon.url"))
-            def user = new UserEntity(publicId: userPublicId, username: "testuser")
             def product = new ProductEntity(productUrl: url, name: "Test Product")
 
-        this.userService.getUserEntity(userPublicId) >> testUser
+            this.userService.getUserEntity(userPublicId) >> testUser
             this.productService.getOrCreateProduct(url, scrapedProduct) >> product
 
         when:
@@ -57,17 +56,16 @@ class PriceAlertServiceSpec extends Specification {
 
         then:
             1 * this.priceAlertRepository.save({ alert ->
-                alert.user == user &&
-                    alert.product == product &&
-                    alert.targetPrice == targetPrice &&
-                    alert.active == true
+                alert.user == testUser &&
+                        alert.product == product &&
+                        alert.targetPrice == targetPrice &&
+                        alert.active == true
             })
     }
 
     def "Should throw E014 when price alert already exists"() {
         given:
             def userPublicId = UUID.randomUUID()
-            def testUser = new UserEntity(publicId: userPublicId, username: "testuser")
             def url = "https://example.com/product"
             def targetPrice = new BigDecimal("1500.00")
             def scrapedProduct = new ScrapedProduct(
@@ -77,11 +75,8 @@ class PriceAlertServiceSpec extends Specification {
                     Currency.getInstance("PLN"),
                     "Test Shop",
                     URI.create("http://favicon.url"))
-            def product = new ProductEntity(productUrl: url, name: "Test Product")
 
-            this.userService.getUserEntity(userPublicId) >> testUser
-            this.productService.getOrCreateProduct(url, scrapedProduct) >> product
-            this.priceAlertRepository.existsByUserAndProduct(testUser, product) >> true
+            this.priceAlertRepository.existsByUserPublicIdAndProductProductUrl(userPublicId, url) >> true
 
         when:
             this.service.createPriceAlert(url, targetPrice, scrapedProduct, userPublicId)
@@ -89,25 +84,41 @@ class PriceAlertServiceSpec extends Specification {
         then:
             def e = thrown(PmRuntimeException)
             e.getCode() == ExceptionCode.E014
+            0 * this.userService.getUserEntity(_)
+            0 * this.productService.getOrCreateProduct(_, _)
             0 * this.priceAlertRepository.save(_)
+    }
+
+    def "Should return #expectedResult when checking if alert exists"() {
+        given:
+            def userPublicId = UUID.randomUUID()
+            def url = "https://example.com/product"
+
+            this.priceAlertRepository.existsByUserPublicIdAndProductProductUrl(userPublicId, url) >> expectedResult
+
+        when:
+            def result = this.service.checkAlertExists(userPublicId, url)
+
+        then:
+            result == expectedResult
+
+        where:
+            expectedResult << [true, false]
     }
 
     def "Should return paginated price alerts"() {
         given:
             def userPublicId = UUID.randomUUID()
-            def testUser = new UserEntity(publicId: userPublicId, username: "testuser")
             def pageable = PageRequest.of(0, 20)
             def alertEntity = new PriceAlertEntity()
             def entitiesPage = new PageImpl<>([alertEntity], pageable, 1)
-
-            this.userService.getUserEntity(userPublicId) >> testUser
 
         when:
             def result = this.service.getPriceAlerts(pageable, null, userPublicId)
 
         then:
-            1 * priceAlertRepository.findByUser(testUser, pageable) >> entitiesPage
-            0 * priceAlertRepository.findByUserAndProductNameContainingIgnoreCase(_, _, _)
+            1 * priceAlertRepository.findByUserPublicId(userPublicId, pageable) >> entitiesPage
+            0 * priceAlertRepository.findByUserPublicIdAndProductNameContainingIgnoreCase(_, _, _)
 
             result instanceof PriceAlertPage
             result.content.size() == 1
@@ -117,7 +128,6 @@ class PriceAlertServiceSpec extends Specification {
     def "Should return filtered price alerts when search term is provided"() {
         given:
             def userPublicId = UUID.randomUUID()
-            def testUser = new UserEntity(publicId: userPublicId, username: "testuser")
             def searchTerm = "Test"
             def product = ProductEntity.builder()
                     .id(1L)
@@ -128,15 +138,12 @@ class PriceAlertServiceSpec extends Specification {
             alertEntity.setProduct(product)
             def filteredPage = new PageImpl<PriceAlertEntity>([alertEntity], pageable, 1)
 
-            this.userService.getUserEntity(userPublicId) >> testUser
-            this.priceAlertRepository.findByUserAndProductNameContainingIgnoreCase(testUser, searchTerm, pageable) >> filteredPage
-
         when:
             def result = this.service.getPriceAlerts(pageable, searchTerm, userPublicId)
 
         then:
-            1 * priceAlertRepository.findByUserAndProductNameContainingIgnoreCase(testUser, searchTerm, pageable) >> filteredPage
-            0 * priceAlertRepository.findByUser(_, _)
+            1 * priceAlertRepository.findByUserPublicIdAndProductNameContainingIgnoreCase(userPublicId, searchTerm, pageable) >> filteredPage
+            0 * priceAlertRepository.findByUserPublicId(_, _)
 
             result instanceof PriceAlertPage
             result.content.size() == 1
@@ -147,18 +154,16 @@ class PriceAlertServiceSpec extends Specification {
     def "Should return empty PriceAlertPage when search term matches nothing"() {
         given:
             def userPublicId = UUID.randomUUID()
-            def testUser = new UserEntity(publicId: userPublicId, username: "testuser")
             def searchTerm = "nonexistent"
             def pageable = PageRequest.of(0, 20)
             def emptyPage = new PageImpl<PriceAlertEntity>([], pageable, 0)
-
-        this.userService.getUserEntity(userPublicId) >> testUser
-        this.priceAlertRepository.findByUserAndProductNameContainingIgnoreCase(testUser, searchTerm, pageable) >> emptyPage
 
         when:
             def result = this.service.getPriceAlerts(pageable, searchTerm, userPublicId)
 
         then:
+            1 * this.priceAlertRepository.findByUserPublicIdAndProductNameContainingIgnoreCase(userPublicId, searchTerm, pageable) >> emptyPage
+
             result instanceof PriceAlertPage
             result.content.isEmpty()
             result.totalElements == 0
@@ -224,5 +229,4 @@ class PriceAlertServiceSpec extends Specification {
         then:
             1 * this.priceAlertRepository.deleteByPublicId(alertPublicId)
     }
-
 }

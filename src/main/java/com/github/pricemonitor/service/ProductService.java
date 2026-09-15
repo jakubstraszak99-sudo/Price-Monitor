@@ -9,12 +9,12 @@ public interface ProductService {
 
     ProductEntity getOrCreateProduct(final String url, final ScrapedProduct data);
 
-    ScrapedProduct getProductInfo(final String url);
+    ScrapedProduct getProductData(final String url);
 
     ProductPage getProducts(final Pageable pageable, final String search);
 
-    void updateProductPrice(final String productUrl, final ScrapedProduct scrapedProduct);
+    void updateProduct(final String productUrl, final ScrapedProduct scrapedProduct);
 
-    void requestPriceCheck(final String url);
+    void requestProductCheck(final String url);
 
 }

@@ -45,7 +45,7 @@ public class ScraperListener {
             return;
         }
 
-        this.productService.updateProductPrice(message.url(), message.scrapedProduct());
+        this.productService.updateProduct(message.url(), message.scrapedProduct());
     }
 
 }

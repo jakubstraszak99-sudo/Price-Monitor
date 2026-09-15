@@ -36,7 +36,27 @@ public interface PriceAlertApi {
     @PostMapping
     ResponseEntity<Void> createAlert(
             @RequestBody @Valid final CreatePriceAlertRequest request,
-            @AuthenticationPrincipal final UUID userPublicId);
+            @AuthenticationPrincipal final UUID userPublicId
+    );
+
+    @Operation(summary = "Check if alert exists", description = "Checks if the user already has an alert for the given product URL")
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Successfully checked if alert exists",
+                    content = @Content(
+                            mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = Boolean.class))),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Invalid product url",
+                    content = @Content(schema = @Schema()))
+    })
+    @GetMapping("/exists")
+    ResponseEntity<Boolean> checkAlertExists(
+            @RequestParam("productUrl") final String productUrl,
+            @AuthenticationPrincipal final UUID userPublicId
+    );
 
     @Operation(summary = "Fetch price alerts", description = "Returns a paginated list of price alerts")
     @ApiResponse(
@@ -72,6 +92,7 @@ public interface PriceAlertApi {
             @PathVariable("publicId") final UUID alertPublicId,
             @RequestBody @Valid final UpdatePriceAlertRequest request
     );
+
 
     @Operation(summary = "Delete price alert", description = "Deletes price alert permanently")
     @ApiResponse(responseCode = "204", description = "Price alert deleted successfully")

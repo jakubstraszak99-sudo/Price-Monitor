@@ -7,12 +7,12 @@ import org.springframework.data.domain.PageRequest
 import spock.lang.Specification
 import spock.lang.Subject
 
-class PriceUpdateSchedulerSpec extends Specification {
+class ProductUpdateSchedulerSpec extends Specification {
 
     def productService = Mock(ProductService)
 
     @Subject
-    def scheduler = new PriceUpdateScheduler(this.productService)
+    def scheduler = new ProductUpdateScheduler(this.productService)
 
     def "Should fetch products in batches and trigger price checks"() {
         given:
@@ -26,12 +26,12 @@ class PriceUpdateSchedulerSpec extends Specification {
             def firstPage = new ProductPage([product1, product2], pageable, 2)
 
         when:
-            this.scheduler.schedulePriceUpdates()
+            this.scheduler.scheduleProductUpdates()
 
         then:
             1 * this.productService.getProducts(pageable, null) >> firstPage
-            1 * this.productService.requestPriceCheck(url1)
-            1 * this.productService.requestPriceCheck(url2)
+            1 * this.productService.requestProductCheck(url1)
+            1 * this.productService.requestProductCheck(url2)
     }
 
 }

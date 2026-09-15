@@ -12,7 +12,7 @@ import java.util.Currency;
 import java.util.Map;
 import java.util.Optional;
 
-@Order(6)
+@Order(4)
 @Component
 public class AmazonScraper extends ShopScraper {
 

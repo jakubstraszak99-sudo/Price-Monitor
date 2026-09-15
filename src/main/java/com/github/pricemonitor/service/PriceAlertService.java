@@ -16,6 +16,8 @@ public interface PriceAlertService {
                           final ScrapedProduct scrapedProduct,
                           final UUID userPublicId);
 
+    boolean checkAlertExists(final UUID userPublicId, final String productUrl);
+
     PriceAlertPage getPriceAlerts(final Pageable pageable,
                                   final String search,
                                   final UUID userPublicId);

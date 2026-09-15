@@ -19,6 +19,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Objects;
 import java.util.Optional;
 
 import static com.github.pricemonitor.exception.ExceptionCode.E011;
@@ -42,7 +43,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public ScrapedProduct getProductInfo(final String url) {
+    public ScrapedProduct getProductData(final String url) {
         return this.findProduct(url)
                 .map(product -> {
                     log.debug("Product found in database: {}", url);
@@ -62,18 +63,29 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional
-    public void updateProductPrice(final String productUrl, final ScrapedProduct scrapedProduct) {
+    public void updateProduct(final String productUrl, final ScrapedProduct scrapedProduct) {
         this.productRepository.findByProductUrl(productUrl).ifPresent(product -> {
-            if (scrapedProduct.price().compareTo(product.getCurrentPrice()) != 0) {
-                log.debug("Price update for {}: old={}, new={}", productUrl, product.getCurrentPrice(), scrapedProduct.price());
+            if (scrapedProduct.price() != null && scrapedProduct.price().compareTo(product.getCurrentPrice()) != 0) {
                 product.setCurrentPrice(scrapedProduct.price());
                 this.priceHistoryService.createPriceHistory(product, scrapedProduct.price());
+            }
+
+            if (scrapedProduct.name() != null && !product.getName().equals(scrapedProduct.name())) {
+                product.setName(scrapedProduct.name());
+            }
+
+            if (scrapedProduct.imageUrl() != null && !product.getImageUrl().equals(String.valueOf(scrapedProduct.imageUrl()))) {
+                product.setImageUrl(String.valueOf(scrapedProduct.imageUrl()));
+            }
+
+            if (scrapedProduct.faviconUrl() != null && !product.getFaviconUrl().equals(String.valueOf(scrapedProduct.faviconUrl()))) {
+                product.setFaviconUrl(String.valueOf(scrapedProduct.faviconUrl()));
             }
         });
     }
 
     @Override
-    public void requestPriceCheck(final String url) {
+    public void requestProductCheck(final String url) {
         final ScraperRequestMessage message = new ScraperRequestMessage(url);
         this.kafkaEventPublisher.publish(SCRAPER_REQUEST_TOPIC, url, message, SCRAPER_REPLY_TOPIC);
     }

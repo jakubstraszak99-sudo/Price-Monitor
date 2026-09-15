@@ -85,7 +85,7 @@ class ProductServiceSpec extends Specification {
             this.productRepository.findByProductUrl(this.url) >> Optional.of(entity)
 
         when:
-            def result = this.service.getProductInfo(this.url)
+            def result = this.service.getProductData(this.url)
 
         then:
             result.name() == "Test Product DB"
@@ -99,7 +99,7 @@ class ProductServiceSpec extends Specification {
             def replyMessage = new ScraperReplyMessage(this.url, this.scrapedData, true, null)
 
         when:
-            def result = this.service.getProductInfo(this.url)
+            def result = this.service.getProductData(this.url)
 
         then:
             result == this.scrapedData
@@ -112,7 +112,7 @@ class ProductServiceSpec extends Specification {
             def replyMessage = new ScraperReplyMessage(this.url, this.scrapedData, false, "error")
 
         when:
-            this.service.getProductInfo(this.url)
+            this.service.getProductData(this.url)
 
         then:
             1 * this.kafkaEventPublisher.publishAndReceive(_, this.url, { request -> request.url() == this.url }) >> replyMessage
@@ -126,7 +126,7 @@ class ProductServiceSpec extends Specification {
             def replyMessage = new ScraperReplyMessage(this.url, null, true, null)
 
         when:
-            this.service.getProductInfo(this.url)
+            this.service.getProductData(this.url)
 
         then:
             1 * this.kafkaEventPublisher.publishAndReceive(_, this.url, { request -> request.url() == this.url }) >> replyMessage
@@ -235,35 +235,53 @@ class ProductServiceSpec extends Specification {
             0 * this.productRepository.findByNameContainingIgnoreCase(_, _)
     }
 
-    def "Should update product price when scraped price is different"() {
+    def "Should update product parameters when scraped data is different"() {
         given:
-            def existingProduct = new ProductEntity(productUrl: this.url, currentPrice: new BigDecimal("200.00"))
+            def existingProduct = new ProductEntity(
+                    productUrl: this.url,
+                    currentPrice: new BigDecimal("200.00"),
+                    name: "Test",
+                    imageUrl: "example.url.image.com",
+                    faviconUrl: "example.url.favicon.com"
+            )
             this.productRepository.findByProductUrl(this.url) >> Optional.of(existingProduct)
 
         when:
-            this.service.updateProductPrice(this.url, this.scrapedData)
+            this.service.updateProduct(this.url, this.scrapedData)
 
         then:
             1 * this.priceHistoryService.createPriceHistory(*_)
             existingProduct.currentPrice == this.price
+            existingProduct.name == this.scrapedData.name()
+            existingProduct.imageUrl == String.valueOf(this.scrapedData.imageUrl())
+            existingProduct.faviconUrl == String.valueOf(this.scrapedData.faviconUrl())
     }
 
     def "Should not update product price when scraped price is identical"() {
         given:
-            def existingProduct = new ProductEntity(productUrl: this.url, currentPrice: this.price)
+        def existingProduct = new ProductEntity(
+                productUrl: this.url,
+                currentPrice: this.price,
+                name: this.scrapedData.name(),
+                imageUrl: String.valueOf(this.scrapedData.imageUrl()),
+                faviconUrl: String.valueOf(this.scrapedData.faviconUrl())
+        )
             this.productRepository.findByProductUrl(this.url) >> Optional.of(existingProduct)
 
         when:
-            this.service.updateProductPrice(this.url, this.scrapedData)
+            this.service.updateProduct(this.url, this.scrapedData)
 
         then:
             0 * this.priceHistoryService.createPriceHistory(*_)
             existingProduct.currentPrice == this.price
+            existingProduct.name == this.scrapedData.name()
+            existingProduct.imageUrl == String.valueOf(this.scrapedData.imageUrl())
+            existingProduct.faviconUrl == String.valueOf(this.scrapedData.faviconUrl())
     }
 
     def "Should publish async request for price check"() {
         when:
-            this.service.requestPriceCheck(this.url)
+            this.service.requestProductCheck(this.url)
 
         then:
             1 * this.kafkaEventPublisher.publish(KafkaUtil.SCRAPER_REQUEST_TOPIC, this.url, { request -> request.url() == this.url }, SCRAPER_REPLY_TOPIC)

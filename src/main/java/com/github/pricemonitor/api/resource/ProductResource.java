@@ -19,7 +19,7 @@ public class ProductResource implements ProductApi {
 
     @Override
     public ResponseEntity<ScrapedProduct> extractProductInfo(final ProductInfoRequest request) {
-        final ScrapedProduct scrapedProduct = this.productService.getProductInfo(request.url());
+        final ScrapedProduct scrapedProduct = this.productService.getProductData(request.url());
         return ResponseEntity.status(HttpStatus.OK).body(scrapedProduct);
     }
 

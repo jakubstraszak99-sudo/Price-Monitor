@@ -17,8 +17,10 @@ public class MediaExpertScraper extends ShopScraper {
     private static final String SHOP_NAME = "Media Expert";
     private static final String TITLE_SELECTOR = "h1.is-title";
     private static final String FALLBACK_TITLE_SELECTOR = "h1";
-    private static final String PRICE_WHOLE_SELECTOR = "span.whole";
-    private static final String PRICE_CENTS_SELECTOR = "span.cents";
+    private static final String MAIN_PRICE_WHOLE_SELECTOR = ".main-price span.whole, .price.is-big span.whole";
+    private static final String MAIN_PRICE_CENTS_SELECTOR = ".main-price span.cents, .price.is-big span.cents";
+    private static final String FALLBACK_PRICE_WHOLE_SELECTOR = "span.whole";
+    private static final String FALLBACK_PRICE_CENTS_SELECTOR = "span.cents";
 
     public MediaExpertScraper(final WebDriverConfig webDriverConfig) {
         super(webDriverConfig);
@@ -41,19 +43,25 @@ public class MediaExpertScraper extends ShopScraper {
 
     @Override
     protected String extractPrice(final Document doc) {
-        final String basePrice = super.extractPrice(doc);
-        if (StringUtils.isNotBlank(basePrice)) {
-            return basePrice;
-        }
+        Element wholeElement = doc.selectFirst(MAIN_PRICE_WHOLE_SELECTOR);
+        Element centsElement = doc.selectFirst(MAIN_PRICE_CENTS_SELECTOR);
 
-        final Element wholeElement = doc.selectFirst(PRICE_WHOLE_SELECTOR);
-        final Element centsElement = doc.selectFirst(PRICE_CENTS_SELECTOR);
+        if (wholeElement == null) {
+            wholeElement = doc.selectFirst(FALLBACK_PRICE_WHOLE_SELECTOR);
+            centsElement = doc.selectFirst(FALLBACK_PRICE_CENTS_SELECTOR);
+        }
 
         if (wholeElement != null) {
-            return wholeElement.text() + (centsElement != null ? "." + centsElement.text() : "");
+            String price = wholeElement.text().replaceAll("[^0-9]", "");
+
+            if (centsElement != null) {
+                price += "." + centsElement.text().replaceAll("[^0-9]", "");
+            }
+
+            return price;
         }
 
-        return null;
+        return super.extractPrice(doc);
     }
 
     @Override
