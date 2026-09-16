@@ -40,8 +40,7 @@ public class PriceAlertServiceImpl implements PriceAlertService {
                                  final BigDecimal targetPrice,
                                  final ScrapedProduct scrapedProduct,
                                  final UUID userPublicId) {
-
-        if (this.checkAlertExists(userPublicId, url)) {
+        if (this.priceAlertRepository.existsByUserPublicIdAndProductProductUrl(userPublicId, url)) {
             throw new PmRuntimeException(E014);
         }
 
@@ -62,7 +61,6 @@ public class PriceAlertServiceImpl implements PriceAlertService {
     public PriceAlertPage getPriceAlerts(final Pageable pageable,
                                          final String search,
                                          final UUID userPublicId) {
-
         final Page<PriceAlertEntity> alerts = (search != null && !search.isBlank())
                 ? this.priceAlertRepository.findByUserPublicIdAndProductNameContainingIgnoreCase(userPublicId, search, pageable)
                 : this.priceAlertRepository.findByUserPublicId(userPublicId, pageable);

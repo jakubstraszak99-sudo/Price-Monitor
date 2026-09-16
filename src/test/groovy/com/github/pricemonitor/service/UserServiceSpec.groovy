@@ -116,7 +116,7 @@ class UserServiceSpec extends Specification {
             def user = new UserEntity(publicId: this.userId, email: this.userEmail)
             this.userRepository.findByEmail(this.userEmail) >> Optional.of(user)
 
-            def resetToken = "reset-token-123"
+            def resetToken = "reset-item-123"
             this.tokenProvider.generateVerificationToken(this.userId) >> resetToken
 
         when:
@@ -124,13 +124,13 @@ class UserServiceSpec extends Specification {
 
         then:
             1 * this.eventPublisher.publish(_, this.userEmail, { event ->
-                event.email() == this.userEmail && event.token() == resetToken
+                event.email() == this.userEmail && event.item() == resetToken
             })
     }
 
     def "Should reset password using valid token"() {
         given:
-            def resetToken = "valid-reset-token"
+            def resetToken = "valid-reset-item"
             def newPassword = "brandNewPassword"
             def newHash = "brand_new_hash"
 

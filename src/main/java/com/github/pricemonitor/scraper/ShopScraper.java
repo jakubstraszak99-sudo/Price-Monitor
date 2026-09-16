@@ -135,7 +135,7 @@ public abstract class ShopScraper {
         try {
             final String host = URI.create(url).getHost();
             return String.format(GOOGLE_FAVICON_URL_TEMPLATE, host);
-        } catch (final Exception e) {
+        } catch (final Exception _) {
             return null;
         }
     }
@@ -152,13 +152,15 @@ public abstract class ShopScraper {
     private String extractShopLabel(final String url) {
         try {
             final String host = URI.create(url).getHost();
+
             if (host == null) {
                 return null;
             }
+            
             final String cleanHost = host.startsWith("www.") ? host.substring(4) : host;
             final String[] parts = cleanHost.split("\\.");
             return parts.length >= 2 ? parts[parts.length - 2] : cleanHost;
-        } catch (final Exception e) {
+        } catch (final Exception _) {
             return null;
         }
     }

@@ -12,6 +12,7 @@ import io.jsonwebtoken.security.SignatureException;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
+import java.time.Instant;
 import java.util.Date;
 import java.util.UUID;
 
@@ -65,12 +66,12 @@ public class TokenProvider {
     }
 
     private String buildToken(final UUID userPublicId, final long expirationTimeMs) {
-        final Date currentDate = new Date();
-        final Date expirationDate = new Date(currentDate.getTime() + expirationTimeMs);
+        final Instant currentTime = Instant.now();
+        final Instant expirationTime = currentTime.plusMillis(expirationTimeMs);
         return Jwts.builder()
                 .subject(userPublicId.toString())
-                .issuedAt(currentDate)
-                .expiration(expirationDate)
+                .issuedAt(Date.from(currentTime))
+                .expiration(Date.from(expirationTime))
                 .signWith(this.key, Jwts.SIG.HS256)
                 .compact();
     }

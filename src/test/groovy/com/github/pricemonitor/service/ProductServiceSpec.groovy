@@ -2,35 +2,39 @@ package com.github.pricemonitor.service
 
 import com.github.pricemonitor.exception.ExceptionCode
 import com.github.pricemonitor.exception.PmRuntimeException
+import com.github.pricemonitor.kafka.KafkaConstants
 import com.github.pricemonitor.kafka.KafkaEventPublisher
 import com.github.pricemonitor.kafka.message.ScraperReplyMessage
 import com.github.pricemonitor.model.dto.ScrapedProduct
+import com.github.pricemonitor.model.entity.PriceAlertEntity
 import com.github.pricemonitor.model.entity.ProductEntity
+import com.github.pricemonitor.model.entity.UserEntity
 import com.github.pricemonitor.model.mapper.ProductMapperImpl
 import com.github.pricemonitor.model.page.ProductPage
 import com.github.pricemonitor.repository.ProductRepository
 import com.github.pricemonitor.service.impl.ProductServiceImpl
-import com.github.pricemonitor.utils.KafkaUtil
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.PageRequest
 import spock.lang.Specification
 import spock.lang.Subject
 
-import static com.github.pricemonitor.utils.KafkaUtil.SCRAPER_REPLY_TOPIC
+import static com.github.pricemonitor.kafka.KafkaConstants.SCRAPER_REPLY_TOPIC
 
 class ProductServiceSpec extends Specification {
 
     def productRepository = Mock(ProductRepository)
-    def kafkaEventPublisher = Mock(KafkaEventPublisher)
+    def eventPublisher = Mock(KafkaEventPublisher)
     def priceHistoryService = Mock(PriceHistoryService)
+    def priceAlertNotificationService = Mock(PriceAlertNotificationService)
     def productMapper = new ProductMapperImpl()
 
     @Subject
     def service = new ProductServiceImpl(
             this.productRepository,
             this.productMapper,
-            this.kafkaEventPublisher,
-            this.priceHistoryService
+            this.eventPublisher,
+            this.priceHistoryService,
+            this.priceAlertNotificationService
     )
 
     def url = "https://example.com/product"
@@ -90,7 +94,7 @@ class ProductServiceSpec extends Specification {
         then:
             result.name() == "Test Product DB"
             result.price() == this.price
-            0 * this.kafkaEventPublisher.publishAndReceive(*_)
+            0 * this.eventPublisher.publishAndReceive(*_)
     }
 
     def "Should fetch from Kafka when product is not in database"() {
@@ -103,7 +107,7 @@ class ProductServiceSpec extends Specification {
 
         then:
             result == this.scrapedData
-            1 * this.kafkaEventPublisher.publishAndReceive(_, this.url, { request -> request.url() == this.url }) >> replyMessage
+            1 * this.eventPublisher.publishAndReceive(_, this.url, { request -> request.url() == this.url }) >> replyMessage
     }
 
     def "Should throw exception when Kafka returns failure"() {
@@ -115,7 +119,7 @@ class ProductServiceSpec extends Specification {
             this.service.getProductData(this.url)
 
         then:
-            1 * this.kafkaEventPublisher.publishAndReceive(_, this.url, { request -> request.url() == this.url }) >> replyMessage
+            1 * this.eventPublisher.publishAndReceive(_, this.url, { request -> request.url() == this.url }) >> replyMessage
             def e = thrown(PmRuntimeException)
             e.getCode() == ExceptionCode.E011
     }
@@ -129,7 +133,7 @@ class ProductServiceSpec extends Specification {
             this.service.getProductData(this.url)
 
         then:
-            1 * this.kafkaEventPublisher.publishAndReceive(_, this.url, { request -> request.url() == this.url }) >> replyMessage
+            1 * this.eventPublisher.publishAndReceive(_, this.url, { request -> request.url() == this.url }) >> replyMessage
             def e = thrown(PmRuntimeException)
             e.getCode() == ExceptionCode.E011
     }
@@ -235,7 +239,7 @@ class ProductServiceSpec extends Specification {
             0 * this.productRepository.findByNameContainingIgnoreCase(_, _)
     }
 
-    def "Should update product parameters when scraped data is different"() {
+    def "Should update product parameters and notify users when price changes"() {
         given:
             def existingProduct = new ProductEntity(
                     productUrl: this.url,
@@ -251,20 +255,21 @@ class ProductServiceSpec extends Specification {
 
         then:
             1 * this.priceHistoryService.createPriceHistory(*_)
+            1 * this.priceAlertNotificationService.notifyAboutPriceChange(existingProduct, scrapedData.price())
             existingProduct.currentPrice == this.price
             existingProduct.name == this.scrapedData.name()
-            existingProduct.imageUrl == String.valueOf(this.scrapedData.imageUrl())
-            existingProduct.faviconUrl == String.valueOf(this.scrapedData.faviconUrl())
+            existingProduct.imageUrl == this.scrapedData.imageUrl().toString()
+            existingProduct.faviconUrl == this.scrapedData.faviconUrl().toString()
     }
 
-    def "Should not update product price when scraped price is identical"() {
+    def "Should not update product data when scraped data is identical"() {
         given:
         def existingProduct = new ProductEntity(
                 productUrl: this.url,
                 currentPrice: this.price,
                 name: this.scrapedData.name(),
-                imageUrl: String.valueOf(this.scrapedData.imageUrl()),
-                faviconUrl: String.valueOf(this.scrapedData.faviconUrl())
+                imageUrl: this.scrapedData.imageUrl().toString(),
+                faviconUrl: this.scrapedData.faviconUrl().toString()
         )
             this.productRepository.findByProductUrl(this.url) >> Optional.of(existingProduct)
 
@@ -275,8 +280,30 @@ class ProductServiceSpec extends Specification {
             0 * this.priceHistoryService.createPriceHistory(*_)
             existingProduct.currentPrice == this.price
             existingProduct.name == this.scrapedData.name()
-            existingProduct.imageUrl == String.valueOf(this.scrapedData.imageUrl())
-            existingProduct.faviconUrl == String.valueOf(this.scrapedData.faviconUrl())
+            existingProduct.imageUrl == this.scrapedData.imageUrl().toString()
+            existingProduct.faviconUrl == this.scrapedData.faviconUrl().toString()
+    }
+
+    def "Should not update product data when scraped data is null"() {
+        given:
+            def existingProduct = new ProductEntity(
+                    productUrl: this.url,
+                    currentPrice: this.price,
+                    name: this.scrapedData.name(),
+                    imageUrl: this.scrapedData.imageUrl().toString(),
+                    faviconUrl: this.scrapedData.faviconUrl().toString()
+            )
+            this.productRepository.findByProductUrl(this.url) >> Optional.of(existingProduct)
+
+        when:
+            this.service.updateProduct(this.url, new ScrapedProduct(null, null, null, null, null, null))
+
+        then:
+            0 * this.priceHistoryService.createPriceHistory(*_)
+            existingProduct.currentPrice == this.price
+            existingProduct.name == this.scrapedData.name()
+            existingProduct.imageUrl == this.scrapedData.imageUrl().toString()
+            existingProduct.faviconUrl == this.scrapedData.faviconUrl().toString()
     }
 
     def "Should publish async request for price check"() {
@@ -284,7 +311,7 @@ class ProductServiceSpec extends Specification {
             this.service.requestProductCheck(this.url)
 
         then:
-            1 * this.kafkaEventPublisher.publish(KafkaUtil.SCRAPER_REQUEST_TOPIC, this.url, { request -> request.url() == this.url }, SCRAPER_REPLY_TOPIC)
+            1 * this.eventPublisher.publish(KafkaConstants.SCRAPER_REQUEST_TOPIC, this.url, { request -> request.url() == this.url }, SCRAPER_REPLY_TOPIC)
     }
 
 }

@@ -39,7 +39,6 @@ public class UserEntity extends BaseEntity {
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     @ToString.Exclude
-    @EqualsAndHashCode.Exclude
     @Builder.Default
     private List<PriceAlertEntity> priceAlerts = new ArrayList<>();
 

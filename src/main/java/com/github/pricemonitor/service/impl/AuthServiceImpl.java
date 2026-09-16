@@ -19,8 +19,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
+import static com.github.pricemonitor.kafka.KafkaConstants.REGISTRATION_TOPIC;
 import static com.github.pricemonitor.exception.ExceptionCode.*;
-import static com.github.pricemonitor.utils.KafkaUtil.REGISTRATION_TOPIC;
 
 @Slf4j
 @Service
@@ -38,7 +38,7 @@ public class AuthServiceImpl implements AuthService {
     public void registerUser(final String username, final String email, final String password) {
         this.userRepository.findByUsernameOrEmail(username, email).ifPresent(
                 existingUser -> {
-                    if (existingUser.getVerified()) {
+                    if (Boolean.TRUE.equals(existingUser.getVerified())) {
                         throw new PmRuntimeException(E007);
                     }
 
@@ -65,7 +65,7 @@ public class AuthServiceImpl implements AuthService {
         final UserEntity user = this.userRepository.findByPublicId(publicId)
                 .orElseThrow(() -> new PmRuntimeException(E001));
 
-        if (user.getVerified()) {
+        if (Boolean.TRUE.equals(user.getVerified())) {
             throw new PmRuntimeException(E002);
         }
 
@@ -82,7 +82,7 @@ public class AuthServiceImpl implements AuthService {
                 .findByUsernameOrEmail(login, login)
                 .orElseThrow(() -> new PmRuntimeException(E008));
 
-        if (!this.passwordEncoder.matches(password, user.getPasswordHash()) || !user.getVerified()) {
+        if (!this.passwordEncoder.matches(password, user.getPasswordHash()) || Boolean.FALSE.equals(user.getVerified())) {
             throw new PmRuntimeException(E008);
         }
 

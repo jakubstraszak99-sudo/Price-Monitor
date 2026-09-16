@@ -18,7 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.UUID;
 
 import static com.github.pricemonitor.exception.ExceptionCode.*;
-import static com.github.pricemonitor.utils.KafkaUtil.PASSWORD_RESET_TOPIC;
+import static com.github.pricemonitor.kafka.KafkaConstants.PASSWORD_RESET_TOPIC;
 
 @Slf4j
 @Service
@@ -34,20 +34,19 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional(readOnly = true)
     public UserEntity getUserEntity(final UUID publicId) {
-        return this.userRepository.findByPublicId(publicId)
-                .orElseThrow(() -> new PmRuntimeException(E001));
+        return this.fetchUser(publicId);
     }
 
     @Override
     @Transactional(readOnly = true)
     public User getUser(final UUID publicId) {
-        return this.userMapper.map(this.getUserEntity(publicId));
+        return this.userMapper.map(this.fetchUser(publicId));
     }
 
     @Override
     @Transactional
     public void updatePassword(final UUID userPublicId, final String oldPassword, final String newPassword) {
-        final UserEntity user = this.getUserEntity(userPublicId);
+        final UserEntity user = this.fetchUser(userPublicId);
 
         if (!this.passwordEncoder.matches(oldPassword, user.getPasswordHash())) {
             throw new PmRuntimeException(E003);
@@ -77,9 +76,14 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public void resetPassword(final String resetToken, final String newPassword) {
         final UUID userPublicId = this.tokenProvider.extractUserPublicId(resetToken);
-        final UserEntity user = this.getUserEntity(userPublicId);
+        final UserEntity user = this.fetchUser(userPublicId);
         user.setPasswordHash(this.passwordEncoder.encode(newPassword));
         this.userRepository.save(user);
+    }
+
+    private UserEntity fetchUser(final UUID publicId) {
+        return this.userRepository.findByPublicId(publicId)
+                .orElseThrow(() -> new PmRuntimeException(E001));
     }
 
 }

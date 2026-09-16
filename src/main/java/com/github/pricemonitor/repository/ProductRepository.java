@@ -14,4 +14,5 @@ public interface ProductRepository extends JpaRepository<ProductEntity, Long> {
     Optional<ProductEntity> findByProductUrl(final String url);
 
     Page<ProductEntity> findByNameContainingIgnoreCase(final String name, final Pageable pageable);
+
 }

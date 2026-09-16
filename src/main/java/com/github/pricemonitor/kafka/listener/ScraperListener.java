@@ -11,8 +11,8 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.stereotype.Component;
 
-import static com.github.pricemonitor.utils.KafkaUtil.SCRAPER_REPLY_TOPIC;
-import static com.github.pricemonitor.utils.KafkaUtil.SCRAPER_REQUEST_TOPIC;
+import static com.github.pricemonitor.kafka.KafkaConstants.SCRAPER_REPLY_TOPIC;
+import static com.github.pricemonitor.kafka.KafkaConstants.SCRAPER_REQUEST_TOPIC;
 
 @Slf4j
 @Component

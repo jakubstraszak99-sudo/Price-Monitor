@@ -12,7 +12,7 @@ class TokenProviderSpec extends Specification {
     def verificationExpMs = 3600000L
     def accessExpMs = 900000L
     def refreshExpMs = 86400000L
-    def appProperties = new AppProperties(null, new AppProperties.Jwt(this.secret, this.verificationExpMs, this.accessExpMs, this.refreshExpMs), null)
+    def appProperties = new AppProperties(null, new AppProperties.Jwt(this.secret, this.verificationExpMs, this.accessExpMs, this.refreshExpMs), null, null, null)
 
     @Subject
     def tokenProvider = new TokenProvider(this.appProperties)
@@ -49,7 +49,7 @@ class TokenProviderSpec extends Specification {
 
     def "Should throw E005 when trying to extract ID from expired token"() {
         given:
-        def expiredProperties = new AppProperties(null, new AppProperties.Jwt(this.secret, -600000L, -600000L, -600000L), null)
+        def expiredProperties = new AppProperties(null, new AppProperties.Jwt(this.secret, -600000L, -600000L, -600000L), null, null, null)
         def expiredProvider = new TokenProvider(expiredProperties)
         def expiredToken = expiredProvider.generateAccessToken(this.userPublicId)
 
@@ -64,7 +64,7 @@ class TokenProviderSpec extends Specification {
     def "Should throw E006 when trying to extract ID from token with invalid signature"() {
         given:
             def hackerSecret = "aGFrZXJza2ktc2VjcmV0LWtleS10aGF0LWlzLWF0LWxlYXN0LTMyLWJ5dGVzLWxvbmch"
-            def hackerProperties = new AppProperties(null, new AppProperties.Jwt(hackerSecret, this.accessExpMs, this.accessExpMs, this.refreshExpMs), null)
+            def hackerProperties = new AppProperties(null, new AppProperties.Jwt(hackerSecret, this.accessExpMs, this.accessExpMs, this.refreshExpMs), null, null, null)
             def hackerProvider = new TokenProvider(hackerProperties)
             def forgedToken = hackerProvider.generateAccessToken(this.userPublicId)
 

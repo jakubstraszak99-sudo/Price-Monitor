@@ -5,7 +5,11 @@ import com.github.pricemonitor.model.dto.AccessTokenExpiryInfo;
 import com.github.pricemonitor.model.dto.AuthTokenSet;
 import com.github.pricemonitor.model.request.user.UserLoginRequest;
 import com.github.pricemonitor.model.request.user.UserRegisterRequest;
+import com.github.pricemonitor.properties.AppProperties;
 import com.github.pricemonitor.service.AuthService;
+import jakarta.annotation.Nullable;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -13,13 +17,16 @@ import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
-import static com.github.pricemonitor.utils.AuthenticationUtil.*;
+import java.util.Arrays;
+import java.util.Optional;
 
 @RestController
 @RequiredArgsConstructor
 public class AuthResource implements AuthApi {
 
     private final AuthService authService;
+    private final AppProperties appProperties;
+    private final HttpServletRequest request;
 
     @Override
     public ResponseEntity<Void> register(final UserRegisterRequest request) {
@@ -30,56 +37,72 @@ public class AuthResource implements AuthApi {
     @Override
     public ResponseEntity<Void> verify(final String token) {
         final AuthTokenSet authTokenSet = this.authService.verifyAccount(token);
-        final ResponseCookie accessCookie = this.buildAccessCookie(authTokenSet.accessToken(), authTokenSet.accessExpirationSeconds());
-        final ResponseCookie refreshCookie = this.buildRefreshCookie(authTokenSet.refreshToken(), authTokenSet.refreshExpirationSeconds());
 
-        return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, accessCookie.toString())
-                .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
+        return ResponseEntity.status(HttpStatus.OK)
+                .header(HttpHeaders.SET_COOKIE, this.buildAccessCookie(
+                        authTokenSet.accessToken(),
+                        authTokenSet.accessExpirationSeconds())
+                        .toString())
+                .header(HttpHeaders.SET_COOKIE, this.buildRefreshCookie(
+                        authTokenSet.refreshToken(),
+                        authTokenSet.refreshExpirationSeconds())
+                        .toString())
                 .build();
     }
 
     @Override
     public ResponseEntity<Void> login(final UserLoginRequest request) {
         final AuthTokenSet authTokenSet = this.authService.login(request.login(), request.password());
-        final ResponseCookie accessCookie = this.buildAccessCookie(authTokenSet.accessToken(), authTokenSet.accessExpirationSeconds());
-        final ResponseCookie refreshCookie = this.buildRefreshCookie(authTokenSet.refreshToken(), authTokenSet.refreshExpirationSeconds());
 
-        return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, accessCookie.toString())
-                .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
+        return ResponseEntity.status(HttpStatus.OK)
+                .header(HttpHeaders.SET_COOKIE, this.buildAccessCookie(
+                        authTokenSet.accessToken(),
+                        authTokenSet.accessExpirationSeconds())
+                        .toString())
+                .header(HttpHeaders.SET_COOKIE, this.buildRefreshCookie(
+                        authTokenSet.refreshToken(),
+                        authTokenSet.refreshExpirationSeconds())
+                        .toString())
                 .build();
     }
 
     @Override
-    public ResponseEntity<Void> logout(final String refreshToken) {
-        this.authService.logout(refreshToken);
-
-        final ResponseCookie clearAccessCookie = this.buildCookie(ACCESS_TOKEN_COOKIE, "", ACCESS_TOKEN_PATH, 0);
-        final ResponseCookie clearRefreshCookie = this.buildCookie(REFRESH_TOKEN_COOKIE, "", REFRESH_TOKEN_PATH, 0);
-
-        return ResponseEntity.noContent()
-                .header(HttpHeaders.SET_COOKIE, clearAccessCookie.toString())
-                .header(HttpHeaders.SET_COOKIE, clearRefreshCookie.toString())
+    public ResponseEntity<Void> logout() {
+        this.authService.logout(this.getRefreshToken());
+        return ResponseEntity.status(HttpStatus.NO_CONTENT)
+                .header(HttpHeaders.SET_COOKIE, this.buildAccessCookie("", 0).toString())
+                .header(HttpHeaders.SET_COOKIE, this.buildRefreshCookie("", 0).toString())
                 .build();
     }
 
     @Override
-    public ResponseEntity<Void> refreshToken(final String refreshToken) {
-        final AccessTokenExpiryInfo accessTokenExpiryInfo = this.authService.refreshToken(refreshToken);
-        final ResponseCookie accessCookie = this.buildAccessCookie(accessTokenExpiryInfo.accessToken(), accessTokenExpiryInfo.accessExpirationSeconds());
-
-        return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, accessCookie.toString())
+    public ResponseEntity<Void> refreshToken() {
+        final AccessTokenExpiryInfo accessTokenExpiryInfo = this.authService.refreshToken(this.getRefreshToken());
+        return ResponseEntity.status(HttpStatus.OK)
+                .header(HttpHeaders.SET_COOKIE, this.buildAccessCookie(
+                        accessTokenExpiryInfo.accessToken(),
+                        accessTokenExpiryInfo.accessExpirationSeconds())
+                        .toString())
                 .build();
+    }
+
+    @Nullable
+    private String getRefreshToken() {
+        return Optional.ofNullable(this.request.getCookies())
+                .stream()
+                .flatMap(Arrays::stream)
+                .filter(cookie -> this.appProperties.cookie().refreshToken().equals(cookie.getName()))
+                .map(Cookie::getValue)
+                .findFirst()
+                .orElse(null);
     }
 
     private ResponseCookie buildAccessCookie(final String value, final long maxAgeSeconds) {
-        return this.buildCookie(ACCESS_TOKEN_COOKIE, value, ACCESS_TOKEN_PATH, maxAgeSeconds);
+        return this.buildCookie(this.appProperties.cookie().accessToken(), value, this.appProperties.paths().accessToken(), maxAgeSeconds);
     }
 
     private ResponseCookie buildRefreshCookie(final String value, final long maxAgeSeconds) {
-        return this.buildCookie(REFRESH_TOKEN_COOKIE, value, REFRESH_TOKEN_PATH, maxAgeSeconds);
+        return this.buildCookie(this.appProperties.cookie().refreshToken(), value, this.appProperties.paths().refreshToken(), maxAgeSeconds);
     }
 
     private ResponseCookie buildCookie(final String name, final String value, final String path, final long maxAgeSeconds) {

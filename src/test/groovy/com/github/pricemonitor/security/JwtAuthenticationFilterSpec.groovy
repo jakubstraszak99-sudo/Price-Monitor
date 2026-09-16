@@ -1,5 +1,6 @@
 package com.github.pricemonitor.security
 
+import com.github.pricemonitor.properties.AppProperties
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.Cookie
 import org.springframework.mock.web.MockHttpServletRequest
@@ -12,9 +13,11 @@ class JwtAuthenticationFilterSpec extends Specification {
 
     def tokenProvider = Mock(TokenProvider)
     def filterChain = Mock(FilterChain)
+    def accessToken = "accessToken"
+    def appProperties = new AppProperties(null, null, null, new AppProperties.Cookie(this.accessToken, null), null)
 
     @Subject
-    def filter = new JwtAuthenticationFilter(this.tokenProvider)
+    def filter = new JwtAuthenticationFilter(this.tokenProvider, this.appProperties)
 
     def request = new MockHttpServletRequest()
     def response = new MockHttpServletResponse()
@@ -29,10 +32,10 @@ class JwtAuthenticationFilterSpec extends Specification {
 
     def "Should authenticate user when valid token is present in cookies"() {
         given:
-            def token = "valid-jwt-token"
+            def token = "valid-jwt-item"
             def userPublicId = UUID.randomUUID()
 
-            this.request.setCookies(new Cookie("accessToken", token))
+            this.request.setCookies(new Cookie(this.accessToken, token))
             this.tokenProvider.extractUserPublicId(token) >> userPublicId
 
         when:

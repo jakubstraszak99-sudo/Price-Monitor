@@ -24,7 +24,7 @@ import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 
-import static com.github.pricemonitor.utils.KafkaUtil.*;
+import static com.github.pricemonitor.kafka.KafkaConstants.*;
 
 @Configuration
 public class KafkaConfig {

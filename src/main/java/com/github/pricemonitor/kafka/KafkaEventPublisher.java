@@ -32,32 +32,36 @@ public class KafkaEventPublisher {
     }
 
     public <T extends KafkaMessage> void publish(final String topic, final String identifier, final T event, final String replyTopic) {
-        final ProducerRecord<String, KafkaMessage> record = new ProducerRecord<>(topic, identifier, event);
-        record.headers().add(new RecordHeader(KafkaHeaders.REPLY_TOPIC, replyTopic.getBytes(StandardCharsets.UTF_8)));
-        this.send(record);
+        final ProducerRecord<String, KafkaMessage> message = new ProducerRecord<>(topic, identifier, event);
+        message.headers().add(new RecordHeader(KafkaHeaders.REPLY_TOPIC, replyTopic.getBytes(StandardCharsets.UTF_8)));
+        this.send(message);
     }
 
     @SuppressWarnings("unchecked")
     public <T extends KafkaMessage, R extends KafkaMessage> R publishAndReceive(final String topic, final String identifier, final T event) {
         log.debug("Sending request event and waiting for reply: topic={}, identifier={}", topic, identifier);
 
-        final ProducerRecord<String, KafkaMessage> record = new ProducerRecord<>(topic, identifier, event);
-        final RequestReplyFuture<String, KafkaMessage, KafkaMessage> replyFuture = this.replyingTemplate.sendAndReceive(record);
+        final ProducerRecord<String, KafkaMessage> message = new ProducerRecord<>(topic, identifier, event);
+        final RequestReplyFuture<String, KafkaMessage, KafkaMessage> replyFuture = this.replyingTemplate.sendAndReceive(message);
 
         try {
             final ConsumerRecord<String, KafkaMessage> consumerRecord = replyFuture.get();
             return (R) consumerRecord.value();
-        } catch (InterruptedException | ExecutionException e) {
+        } catch (ExecutionException e) {
             log.error("Failed to receive reply for event: topic={}, identifier={}", topic, identifier, e);
-            throw new PmRuntimeException(E013);
+            throw new PmRuntimeException(E013, e);
+        } catch (final InterruptedException e) {
+            Thread.currentThread().interrupt();
+            log.error("Interrupted while waiting for Kafka reply: topic={}, identifier={}", topic, identifier, e);
+            throw new PmRuntimeException(E013, e);
         }
     }
 
-    private void send(final ProducerRecord<String, KafkaMessage> record) {
-        final String topic = record.topic();
-        final String identifier = record.key();
+    private void send(final ProducerRecord<String, KafkaMessage> message) {
+        final String topic = message.topic();
+        final String identifier = message.key();
 
-        this.template.send(record)
+        this.template.send(message)
                 .whenComplete((result, exception) -> {
                     if (exception != null) {
                         log.error("Failed to send event to Kafka: topic={}, identifier={}", topic, identifier, exception);

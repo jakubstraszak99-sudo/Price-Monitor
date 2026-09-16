@@ -48,13 +48,11 @@ public class ProductEntity extends BaseEntity {
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     @ToString.Exclude
-    @EqualsAndHashCode.Exclude
     @Builder.Default
     private List<PriceHistoryEntity> priceHistories = new ArrayList<>();
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     @ToString.Exclude
-    @EqualsAndHashCode.Exclude
     @Builder.Default
     private List<PriceAlertEntity> priceAlerts = new ArrayList<>();
 

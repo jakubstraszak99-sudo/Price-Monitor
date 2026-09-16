@@ -1,5 +1,6 @@
 package com.github.pricemonitor.security;
 
+import com.github.pricemonitor.properties.AppProperties;
 import jakarta.annotation.Nullable;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -19,13 +20,12 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.UUID;
 
-import static com.github.pricemonitor.utils.AuthenticationUtil.ACCESS_TOKEN_COOKIE;
-
 @Component
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final TokenProvider tokenProvider;
+    private final AppProperties appProperties;
 
     @Override
     protected void doFilterInternal(@NonNull final HttpServletRequest request,
@@ -44,7 +44,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                 authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authentication);
-            } catch (final Exception e) {
+            } catch (final Exception _) {
                 SecurityContextHolder.clearContext();
             }
         }
@@ -59,7 +59,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         return Arrays.stream(request.getCookies())
-                .filter(cookie -> ACCESS_TOKEN_COOKIE.equals(cookie.getName()))
+                .filter(cookie -> this.appProperties.cookie().accessToken().equals(cookie.getName()))
                 .map(Cookie::getValue)
                 .findFirst()
                 .orElse(null);

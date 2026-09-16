@@ -10,6 +10,7 @@ import com.github.pricemonitor.model.entity.ProductEntity;
 import com.github.pricemonitor.model.mapper.ProductMapper;
 import com.github.pricemonitor.model.page.ProductPage;
 import com.github.pricemonitor.repository.ProductRepository;
+import com.github.pricemonitor.service.PriceAlertNotificationService;
 import com.github.pricemonitor.service.PriceHistoryService;
 import com.github.pricemonitor.service.ProductService;
 import lombok.RequiredArgsConstructor;
@@ -19,12 +20,14 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.net.URI;
 import java.util.Objects;
 import java.util.Optional;
 
 import static com.github.pricemonitor.exception.ExceptionCode.E011;
-import static com.github.pricemonitor.utils.KafkaUtil.SCRAPER_REPLY_TOPIC;
-import static com.github.pricemonitor.utils.KafkaUtil.SCRAPER_REQUEST_TOPIC;
+import static com.github.pricemonitor.kafka.KafkaConstants.SCRAPER_REPLY_TOPIC;
+import static com.github.pricemonitor.kafka.KafkaConstants.SCRAPER_REQUEST_TOPIC;
 
 @Slf4j
 @Service
@@ -33,8 +36,9 @@ public class ProductServiceImpl implements ProductService {
 
     private final ProductRepository productRepository;
     private final ProductMapper productMapper;
-    private final KafkaEventPublisher kafkaEventPublisher;
+    private final KafkaEventPublisher eventPublisher;
     private final PriceHistoryService priceHistoryService;
+    private final PriceAlertNotificationService priceAlertNotificationService;
 
     @Override
     @Transactional
@@ -64,30 +68,14 @@ public class ProductServiceImpl implements ProductService {
     @Override
     @Transactional
     public void updateProduct(final String productUrl, final ScrapedProduct scrapedProduct) {
-        this.productRepository.findByProductUrl(productUrl).ifPresent(product -> {
-            if (scrapedProduct.price() != null && scrapedProduct.price().compareTo(product.getCurrentPrice()) != 0) {
-                product.setCurrentPrice(scrapedProduct.price());
-                this.priceHistoryService.createPriceHistory(product, scrapedProduct.price());
-            }
-
-            if (scrapedProduct.name() != null && !product.getName().equals(scrapedProduct.name())) {
-                product.setName(scrapedProduct.name());
-            }
-
-            if (scrapedProduct.imageUrl() != null && !product.getImageUrl().equals(String.valueOf(scrapedProduct.imageUrl()))) {
-                product.setImageUrl(String.valueOf(scrapedProduct.imageUrl()));
-            }
-
-            if (scrapedProduct.faviconUrl() != null && !product.getFaviconUrl().equals(String.valueOf(scrapedProduct.faviconUrl()))) {
-                product.setFaviconUrl(String.valueOf(scrapedProduct.faviconUrl()));
-            }
-        });
+        this.productRepository.findByProductUrl(productUrl)
+                .ifPresent(product -> this.updateProductData(product, scrapedProduct));
     }
 
     @Override
     public void requestProductCheck(final String url) {
         final ScraperRequestMessage message = new ScraperRequestMessage(url);
-        this.kafkaEventPublisher.publish(SCRAPER_REQUEST_TOPIC, url, message, SCRAPER_REPLY_TOPIC);
+        this.eventPublisher.publish(SCRAPER_REQUEST_TOPIC, url, message, SCRAPER_REPLY_TOPIC);
     }
 
     private Optional<ProductEntity> findProduct(final String url) {
@@ -96,7 +84,7 @@ public class ProductServiceImpl implements ProductService {
 
     private ScrapedProduct fetchFromUrl(final String url) {
         final ScraperRequestMessage request = new ScraperRequestMessage(url);
-        final ScraperReplyMessage reply = this.kafkaEventPublisher.publishAndReceive(SCRAPER_REQUEST_TOPIC, url, request);
+        final ScraperReplyMessage reply = this.eventPublisher.publishAndReceive(SCRAPER_REQUEST_TOPIC, url, request);
 
         if (!reply.success() || reply.scrapedProduct() == null) {
             throw new PmRuntimeException(E011);
@@ -110,6 +98,39 @@ public class ProductServiceImpl implements ProductService {
         this.priceHistoryService.createPriceHistory(product);
 
         return product;
+    }
+
+    private void updateProductData(final ProductEntity product, final ScrapedProduct data) {
+        this.updatePrice(product, data.price());
+        this.updateName(product, data.name());
+        this.updateImage(product, data.imageUrl());
+        this.updateFavicon(product, data.faviconUrl());
+    }
+
+    private void updatePrice(final ProductEntity product, final BigDecimal newPrice) {
+        if (newPrice != null && newPrice.compareTo(product.getCurrentPrice()) != 0) {
+            product.setCurrentPrice(newPrice);
+            this.priceHistoryService.createPriceHistory(product, newPrice);
+            this.priceAlertNotificationService.notifyAboutPriceChange(product, newPrice);
+        }
+    }
+
+    private void updateName(final ProductEntity product, final String newName) {
+        if (newName != null && !product.getName().equals(newName)) {
+            product.setName(newName);
+        }
+    }
+
+    private void updateImage(final ProductEntity product, final URI newImage) {
+        if (newImage != null && !Objects.equals(product.getImageUrl(), newImage.toString())) {
+            product.setImageUrl(newImage.toString());
+        }
+    }
+
+    private void updateFavicon(final ProductEntity product, final URI newFavicon) {
+        if (newFavicon != null && !Objects.equals(product.getFaviconUrl(), newFavicon.toString())) {
+            product.setFaviconUrl(newFavicon.toString());
+        }
     }
 
 }

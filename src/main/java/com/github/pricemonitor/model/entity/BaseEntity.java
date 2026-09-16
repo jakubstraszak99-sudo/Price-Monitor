@@ -13,7 +13,6 @@ import java.time.LocalDateTime;
 @SuperBuilder
 @NoArgsConstructor
 @MappedSuperclass
-@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public abstract class BaseEntity {
 
     @Id

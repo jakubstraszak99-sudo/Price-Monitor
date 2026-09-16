@@ -12,8 +12,6 @@ import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import static com.github.pricemonitor.utils.AuthenticationUtil.REFRESH_TOKEN_COOKIE;
-
 @Tag(name = "Authentication")
 @RequestMapping("/api/v1/auth")
 public interface AuthApi {
@@ -26,19 +24,20 @@ public interface AuthApi {
     @PostMapping("/register")
     ResponseEntity<Void> register(@RequestBody @Valid final UserRegisterRequest request);
 
-    @Operation(summary = "User verification", description = "Verifies the user account using the JWT token sent via email")
+    @Operation(summary = "User verification", description = "Verifies the user account using the JWT item sent via email")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Account verified successfully"),
-            @ApiResponse(responseCode = "400", description = "Invalid or expired token")
+            @ApiResponse(responseCode = "400", description = "Invalid or expired item")
     })
     @GetMapping("/verify")
     ResponseEntity<Void> verify(
-            @Parameter(description = "JWT verification token", required = true)
-            @RequestParam("token") final String token);
+            @Parameter(description = "JWT verification item", required = true)
+            @RequestParam("item") final String token);
 
     @Operation(summary = "Login user", description = "Authenticates user and returns JWT tokens in HttpOnly cookies")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200",
+            @ApiResponse(
+                    responseCode = "200",
                     description = "Login successful",
                     headers = {
                             @Header(name = "Set-Cookie", description = "accessToken and refreshToken cookies")
@@ -52,9 +51,9 @@ public interface AuthApi {
     @Operation(summary = "Logout user", description = "Invalidates session and clears cookies")
     @ApiResponse(responseCode = "204", description = "Logged out successfully")
     @PostMapping("/logout")
-    ResponseEntity<Void> logout(@Parameter(hidden = true) @CookieValue(name = REFRESH_TOKEN_COOKIE, required = false) final String refreshToken);
+    ResponseEntity<Void> logout();
 
-    @Operation(summary = "Refresh access token", description = "Generate a new access token")
+    @Operation(summary = "Refresh access item", description = "Generate a new access item")
     @ApiResponses(value = {
             @ApiResponse(
                     responseCode = "200",
@@ -63,8 +62,8 @@ public interface AuthApi {
                             @Header(name = "Set-Cookie", description = "New accessToken cookie")
                     }
             ),
-            @ApiResponse(responseCode = "401", description = "Invalid or expired refresh token")
+            @ApiResponse(responseCode = "401", description = "Invalid or expired refresh item")
     })
     @PostMapping("/refresh")
-    ResponseEntity<Void> refreshToken(@Parameter(hidden = true) @CookieValue(name = REFRESH_TOKEN_COOKIE) final String refreshToken);
+    ResponseEntity<Void> refreshToken();
 }

@@ -1,7 +1,7 @@
 package com.github.pricemonitor.service.impl;
 
 import com.github.pricemonitor.properties.AppProperties;
-import com.github.pricemonitor.service.NotificationService;
+import com.github.pricemonitor.service.EmailNotificationService;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
@@ -9,17 +9,16 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
-
-import static com.github.pricemonitor.utils.AuthenticationUtil.PASSWORD_RESET_PATH;
-import static com.github.pricemonitor.utils.AuthenticationUtil.VERIFICATION_TOKEN_PATH;
+import org.springframework.web.util.UriComponentsBuilder;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class NotificationServiceImpl implements NotificationService {
+public class EmailNotificationServiceImpl implements EmailNotificationService {
 
     private static final String VERIFICATION_SUBJECT = "Price Monitor - Account Verification";
     private static final String PASSWORD_RESET_SUBJECT = "Price Monitor - Password Reset Request";
+    private static final String ALERT_SUBJECT = "Price Monitor - Price Alert";
 
     private static final String VERIFICATION_TEMPLATE = """
             <html>
@@ -56,22 +55,44 @@ public class NotificationServiceImpl implements NotificationService {
             </html>
             """;
 
+    private static final String ALERT_TEMPLATE = """
+            <html>
+                <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+                    <h2>Price Alert!</h2>
+                    <p>Price of the product you're tracking has dropped below the price you set!</p>
+                    <p style="margin: 20px 0;">
+                        <a href="%s" style="display: inline-block; padding: 10px 20px; color: #ffffff; background-color: #4f46e5; text-decoration: none; border-radius: 5px; font-weight: bold;">
+                            Check your product
+                        </a>
+                    </p>
+                </body>
+            </html>
+            """;
+
     private final JavaMailSender mailSender;
     private final AppProperties appProperties;
 
     @Override
     public void sendVerificationEmail(final String to, final String token) {
-        final String htmlContent = VERIFICATION_TEMPLATE.formatted(this.buildLink(VERIFICATION_TOKEN_PATH, token));
+        final String link = this.buildLink(this.appProperties.paths().verification(), token);
+        final String htmlContent = VERIFICATION_TEMPLATE.formatted(link);
         this.sendEmail(to, VERIFICATION_SUBJECT, htmlContent);
         log.debug("Verification email sent to: {}", to);
     }
 
-
     @Override
     public void sendPasswordResetEmail(final String to, final String token) {
-        final String htmlContent = PASSWORD_RESET_TEMPLATE.formatted(this.buildLink(PASSWORD_RESET_PATH, token));
+        final String link = this.buildLink(this.appProperties.paths().passwordReset(), token);
+        final String htmlContent = PASSWORD_RESET_TEMPLATE.formatted(link);
         this.sendEmail(to, PASSWORD_RESET_SUBJECT, htmlContent);
         log.debug("Password reset email sent to: {}", to);
+    }
+
+    @Override
+    public void sendAlertNotificationEmail(final String to, final String url) {
+        final String htmlContent = ALERT_TEMPLATE.formatted(url);
+        this.sendEmail(to, ALERT_SUBJECT, htmlContent);
+        log.debug("Alert notification email sent to: {}", to);
     }
 
     private void sendEmail(final String to, final String subject, final String htmlContent) {
@@ -88,8 +109,13 @@ public class NotificationServiceImpl implements NotificationService {
         }
     }
 
-    private String buildLink(final String apiPath, final String token) {
-        return this.appProperties.clientUrl() + apiPath + token;
+    private String buildLink(final String path, final String token) {
+        return UriComponentsBuilder
+                .fromUriString(this.appProperties.clientUrl())
+                .path(path)
+                .queryParam(this.appProperties.paths().tokenQueryParam(), token)
+                .build()
+                .toUriString();
     }
 
 }
