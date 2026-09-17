@@ -6,6 +6,8 @@ import com.github.pricemonitor.kafka.message.EmailNotificationMessage;
 import com.github.pricemonitor.model.dto.User;
 import com.github.pricemonitor.model.entity.UserEntity;
 import com.github.pricemonitor.model.mapper.UserMapper;
+import com.github.pricemonitor.redis.model.PasswordResetToken;
+import com.github.pricemonitor.redis.repository.PasswordResetTokenRedisRepository;
 import com.github.pricemonitor.repository.UserRepository;
 import com.github.pricemonitor.security.TokenProvider;
 import com.github.pricemonitor.service.UserService;
@@ -30,6 +32,7 @@ public class UserServiceImpl implements UserService {
     private final TokenProvider tokenProvider;
     private final KafkaEventPublisher eventPublisher;
     private final PasswordEncoder passwordEncoder;
+    private final PasswordResetTokenRedisRepository passwordResetTokenRedisRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -66,19 +69,31 @@ public class UserServiceImpl implements UserService {
         this.userRepository.findByEmail(email).ifPresentOrElse(
                 user -> {
                     final String resetToken = this.tokenProvider.generateVerificationToken(user.getPublicId());
+                    this.passwordResetTokenRedisRepository.save(PasswordResetToken.builder()
+                            .tokenId(resetToken)
+                            .expirationInSeconds(this.tokenProvider.getVerificationExpirationInSeconds())
+                            .build());
+
                     final EmailNotificationMessage event = new EmailNotificationMessage(user.getEmail(), resetToken);
                     this.eventPublisher.publish(PASSWORD_RESET_TOPIC, user.getEmail(), event);
-                }, () -> log.warn("Password reset requested for non-existent email: {}", email)
+                    }, () -> log.warn("Password reset requested for non-existent email: {}", email)
         );
     }
+
 
     @Override
     @Transactional
     public void resetPassword(final String resetToken, final String newPassword) {
+        if (!this.passwordResetTokenRedisRepository.existsById(resetToken)) {
+            throw new PmRuntimeException(E006);
+        }
+
         final UUID userPublicId = this.tokenProvider.extractUserPublicId(resetToken);
         final UserEntity user = this.fetchUser(userPublicId);
         user.setPasswordHash(this.passwordEncoder.encode(newPassword));
+
         this.userRepository.save(user);
+        this.passwordResetTokenRedisRepository.deleteById(resetToken);
     }
 
     private UserEntity fetchUser(final UUID publicId) {

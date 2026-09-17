@@ -13,7 +13,7 @@ class EmailNotificationServiceSpec extends Specification {
     def fromAddress = "noreply@pricemonitor.com"
     def appUrl = "http://appurl"
     def userEmail = "test@example.com"
-    def testToken = "test-item-123"
+    def testToken = "test-token-123"
     def appProperties = new AppProperties(
             new AppProperties.Mail(this.fromAddress),
             null,
@@ -22,7 +22,7 @@ class EmailNotificationServiceSpec extends Specification {
                     null,
                     "/verify",
                     "/reset-password",
-                    "item"
+                    "token"
             ),
             null,
             this.appUrl

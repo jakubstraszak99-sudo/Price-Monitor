@@ -27,13 +27,14 @@ class PriceAlertNotificationServiceSpec extends Specification {
             def product = new ProductEntity(productUrl: "https://example.com/product")
             ReflectionTestUtils.setField(product, "id", 1L)
             def user = new UserEntity(email: "user@example.com")
-            def alert = new PriceAlertEntity(user: user)
+            def alert = new PriceAlertEntity(user: user, active: true)
             def newPrice = new BigDecimal("199.99")
 
         when:
             this.service.notifyAboutPriceChange(product, newPrice)
 
         then:
+            alert.getActive() == false
             1 * this.priceAlertRepository.findActiveAlertsForProduct(product.getId(), newPrice) >> Collections.singletonList(alert)
             1 * this.eventPublisher.publish(_, "user@example.com", {
                 it instanceof EmailNotificationMessage &&

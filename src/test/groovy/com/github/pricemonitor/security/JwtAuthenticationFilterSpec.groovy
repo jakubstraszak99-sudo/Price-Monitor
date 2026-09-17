@@ -32,7 +32,7 @@ class JwtAuthenticationFilterSpec extends Specification {
 
     def "Should authenticate user when valid token is present in cookies"() {
         given:
-            def token = "valid-jwt-item"
+            def token = "valid-jwt-token"
             def userPublicId = UUID.randomUUID()
 
             this.request.setCookies(new Cookie(this.accessToken, token))

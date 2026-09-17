@@ -21,12 +21,13 @@ public class PriceAlertNotificationServiceImpl implements PriceAlertNotification
     private final KafkaEventPublisher eventPublisher;
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional
     public void notifyAboutPriceChange(final ProductEntity product, final BigDecimal newPrice) {
         this.priceAlertRepository.findActiveAlertsForProduct(product.getId(), newPrice).forEach(alert -> {
             final String email = alert.getUser().getEmail();
             final EmailNotificationMessage event = new EmailNotificationMessage(email, product.getProductUrl());
             this.eventPublisher.publish(ALERT_NOTIFICATION_TOPIC, email, event);
+            alert.setActive(false);
         });
     }
 

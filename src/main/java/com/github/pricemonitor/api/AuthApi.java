@@ -24,15 +24,15 @@ public interface AuthApi {
     @PostMapping("/register")
     ResponseEntity<Void> register(@RequestBody @Valid final UserRegisterRequest request);
 
-    @Operation(summary = "User verification", description = "Verifies the user account using the JWT item sent via email")
+    @Operation(summary = "User verification", description = "Verifies the user account using the JWT token sent via email")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Account verified successfully"),
-            @ApiResponse(responseCode = "400", description = "Invalid or expired item")
+            @ApiResponse(responseCode = "400", description = "Invalid or expired token")
     })
     @GetMapping("/verify")
     ResponseEntity<Void> verify(
-            @Parameter(description = "JWT verification item", required = true)
-            @RequestParam("item") final String token);
+            @Parameter(description = "JWT verification token", required = true)
+            @RequestParam("token") final String token);
 
     @Operation(summary = "Login user", description = "Authenticates user and returns JWT tokens in HttpOnly cookies")
     @ApiResponses(value = {
@@ -53,7 +53,7 @@ public interface AuthApi {
     @PostMapping("/logout")
     ResponseEntity<Void> logout();
 
-    @Operation(summary = "Refresh access item", description = "Generate a new access item")
+    @Operation(summary = "Refresh access token", description = "Generates a new access token")
     @ApiResponses(value = {
             @ApiResponse(
                     responseCode = "200",
@@ -62,7 +62,7 @@ public interface AuthApi {
                             @Header(name = "Set-Cookie", description = "New accessToken cookie")
                     }
             ),
-            @ApiResponse(responseCode = "401", description = "Invalid or expired refresh item")
+            @ApiResponse(responseCode = "401", description = "Invalid or expired refresh token")
     })
     @PostMapping("/refresh")
     ResponseEntity<Void> refreshToken();

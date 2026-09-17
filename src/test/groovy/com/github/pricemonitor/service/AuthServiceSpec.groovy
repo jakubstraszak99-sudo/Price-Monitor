@@ -4,8 +4,8 @@ import com.github.pricemonitor.exception.ExceptionCode
 import com.github.pricemonitor.exception.PmRuntimeException
 import com.github.pricemonitor.kafka.KafkaEventPublisher
 import com.github.pricemonitor.model.entity.UserEntity
-import com.github.pricemonitor.redis.RefreshToken
-import com.github.pricemonitor.redis.RefreshTokenRedisRepository
+import com.github.pricemonitor.redis.model.RefreshToken
+import com.github.pricemonitor.redis.repository.RefreshTokenRedisRepository
 import com.github.pricemonitor.repository.UserRepository
 import com.github.pricemonitor.security.TokenProvider
 import com.github.pricemonitor.service.impl.AuthServiceImpl
@@ -35,7 +35,7 @@ class AuthServiceSpec extends Specification {
     def username = "testuser"
     def password = "secretPassword"
     def passwordHash = "encodedHash"
-    def token = "test-item"
+    def token = "test-token"
 
     def "Should throw exception when trying to register with already verified email"() {
         given:
@@ -101,7 +101,7 @@ class AuthServiceSpec extends Specification {
                     .publicId(this.userId)
                     .verified(false)
                     .build()
-            def refreshToken = new RefreshToken(tokenId: "refresh-item-123", userPublicId: this.userId, expirationInSeconds: 3600L)
+            def refreshToken = new RefreshToken(tokenId: "refresh-token-123", userPublicId: this.userId, expirationInSeconds: 3600L)
             this.tokenProvider.extractUserPublicId(this.token) >> this.userId
             this.tokenProvider.generateRefreshToken(this.userId) >> refreshToken
             this.userRepository.findByPublicId(this.userId) >> Optional.of(user)
@@ -156,8 +156,8 @@ class AuthServiceSpec extends Specification {
             this.userRepository.findByUsernameOrEmail(this.username, this.username) >> Optional.of(user)
             this.passwordEncoder.matches(this.password, this.passwordHash) >> true
 
-            def accessToken = "access-item-123"
-            def refreshToken = new RefreshToken(tokenId: "refresh-item-123", userPublicId: this.userId, expirationInSeconds: 3600L)
+            def accessToken = "access-token-123"
+            def refreshToken = new RefreshToken(tokenId: "refresh-token-123", userPublicId: this.userId, expirationInSeconds: 3600L)
 
             this.tokenProvider.generateAccessToken(this.userId) >> accessToken
             this.tokenProvider.generateRefreshToken(this.userId) >> refreshToken
@@ -230,7 +230,7 @@ class AuthServiceSpec extends Specification {
             def validRefreshToken = new RefreshToken(tokenId: this.token, userPublicId: this.userId)
             this.redisRepository.findById(this.token) >> Optional.of(validRefreshToken)
 
-            def newAccessToken = "new-access-item"
+            def newAccessToken = "new-access-token"
             this.tokenProvider.generateAccessToken(this.userId) >> newAccessToken
             this.tokenProvider.getAccessExpirationInSeconds() >> 900L
 
@@ -257,7 +257,7 @@ class AuthServiceSpec extends Specification {
 
     def "Should delete refresh token from redis on logout"() {
         given:
-            def tokenValue = "refresh-item-123"
+            def tokenValue = "refresh-token-123"
 
         when:
             this.service.logout(tokenValue)

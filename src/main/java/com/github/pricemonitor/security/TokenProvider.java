@@ -2,7 +2,7 @@ package com.github.pricemonitor.security;
 
 import com.github.pricemonitor.exception.PmRuntimeException;
 import com.github.pricemonitor.properties.AppProperties;
-import com.github.pricemonitor.redis.RefreshToken;
+import com.github.pricemonitor.redis.model.RefreshToken;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
@@ -63,6 +63,10 @@ public class TokenProvider {
 
     public long getAccessExpirationInSeconds() {
         return this.jwt.accessExpirationMs() / 1000;
+    }
+
+    public long getVerificationExpirationInSeconds() {
+        return this.jwt.verificationExpirationMs() / 1000;
     }
 
     private String buildToken(final UUID userPublicId, final long expirationTimeMs) {

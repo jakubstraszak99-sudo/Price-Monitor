@@ -5,6 +5,7 @@ import com.github.pricemonitor.exception.PmRuntimeException
 import com.github.pricemonitor.kafka.KafkaEventPublisher
 import com.github.pricemonitor.model.entity.UserEntity
 import com.github.pricemonitor.model.mapper.UserMapperImpl
+import com.github.pricemonitor.redis.repository.PasswordResetTokenRedisRepository
 import com.github.pricemonitor.repository.UserRepository
 import com.github.pricemonitor.security.TokenProvider
 import com.github.pricemonitor.service.impl.UserServiceImpl
@@ -18,6 +19,7 @@ class UserServiceSpec extends Specification {
     def tokenProvider = Mock(TokenProvider)
     def eventPublisher = Mock(KafkaEventPublisher)
     def passwordEncoder = Mock(PasswordEncoder)
+    def passwordResetTokenRedisRepository = Mock(PasswordResetTokenRedisRepository)
     def userMapper = new UserMapperImpl()
 
     @Subject
@@ -26,7 +28,8 @@ class UserServiceSpec extends Specification {
             this.userMapper,
             this.tokenProvider,
             this.eventPublisher,
-            this.passwordEncoder
+            this.passwordEncoder,
+            this.passwordResetTokenRedisRepository
     )
 
     def userId = UUID.randomUUID()
@@ -116,7 +119,7 @@ class UserServiceSpec extends Specification {
             def user = new UserEntity(publicId: this.userId, email: this.userEmail)
             this.userRepository.findByEmail(this.userEmail) >> Optional.of(user)
 
-            def resetToken = "reset-item-123"
+            def resetToken = "reset-token-123"
             this.tokenProvider.generateVerificationToken(this.userId) >> resetToken
 
         when:
@@ -130,10 +133,11 @@ class UserServiceSpec extends Specification {
 
     def "Should reset password using valid token"() {
         given:
-            def resetToken = "valid-reset-item"
+            def resetToken = "valid-reset-token"
             def newPassword = "brandNewPassword"
             def newHash = "brand_new_hash"
 
+            this.passwordResetTokenRedisRepository.existsById(resetToken) >> true
             this.tokenProvider.extractUserPublicId(resetToken) >> this.userId
 
             def user = new UserEntity(publicId:  this.userId, passwordHash:  this.oldHash)
@@ -147,6 +151,22 @@ class UserServiceSpec extends Specification {
         then:
             user.getPasswordHash() == newHash
             1 * this.userRepository.save(user)
+    }
+
+    def "Should reject reset when the token is not (or no longer) whitelisted"() {
+        given:
+            def resetToken = "already-used-or-unknown-token"
+            this.passwordResetTokenRedisRepository.existsById(resetToken) >> false
+
+        when:
+            this.service.resetPassword(resetToken, "somePassword")
+
+        then:
+            def e = thrown(PmRuntimeException)
+            e.getCode() == ExceptionCode.E006
+            0 * this.tokenProvider.extractUserPublicId(_)
+            0 * this.userRepository.save(_)
+            0 * this.passwordResetTokenRedisRepository.deleteById(_)
     }
 
 }

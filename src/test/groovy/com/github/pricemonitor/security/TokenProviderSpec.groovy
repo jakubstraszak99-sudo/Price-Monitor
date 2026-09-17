@@ -81,4 +81,9 @@ class TokenProviderSpec extends Specification {
             (BigDecimal) this.tokenProvider.getAccessExpirationInSeconds() == this.accessExpMs / 1000
     }
 
+    def "Should return correct verification expiration in seconds"() {
+        expect:
+            (BigDecimal) this.tokenProvider.getVerificationExpirationInSeconds() == this.verificationExpMs / 1000
+    }
+
 }

@@ -1,4 +1,4 @@
-package com.github.pricemonitor.redis;
+package com.github.pricemonitor.redis.model;
 
 import lombok.*;
 import org.springframework.data.annotation.Id;
