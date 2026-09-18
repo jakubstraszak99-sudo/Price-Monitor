@@ -16,22 +16,22 @@ import org.springframework.web.util.UriComponentsBuilder;
 @RequiredArgsConstructor
 public class EmailNotificationServiceImpl implements EmailNotificationService {
 
-    private static final String VERIFICATION_SUBJECT = "Price Monitor - Account Verification";
-    private static final String PASSWORD_RESET_SUBJECT = "Price Monitor - Password Reset Request";
-    private static final String ALERT_SUBJECT = "Price Monitor - Price Alert";
+    private static final String VERIFICATION_SUBJECT = "Price Monitor - Weryfikacja konta";
+    private static final String PASSWORD_RESET_SUBJECT = "Price Monitor - Prośba o zmianę hasła";
+    private static final String ALERT_SUBJECT = "Price Monitor - Alert cenowy!";
 
     private static final String VERIFICATION_TEMPLATE = """
             <html>
                 <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
-                    <h2>Welcome to Price Monitor!</h2>
-                    <p>Please verify your account by clicking the button below:</p>
+                    <h2 style="color: #4f46e5;">Witaj w serwisie Price Monitor!</h2>
+                    <p>Wciśnij przycisk poniżej, aby zweryfikować swoje konto:</p>
                     <p style="margin: 20px 0;">
                         <a href="%s" style="display: inline-block; padding: 10px 20px; color: #ffffff; background-color: #007bff; text-decoration: none; border-radius: 5px; font-weight: bold;">
-                            Verify Account
+                            Zweryfikuj Konto
                         </a>
                     </p>
                     <p style="font-size: 12px; color: #777;">
-                        If you did not register for this account, please ignore this email.
+                        Jeśli nie rejestrowałeś konta, zignoruj tę wiadomość.
                     </p>
                 </body>
             </html>
@@ -40,16 +40,15 @@ public class EmailNotificationServiceImpl implements EmailNotificationService {
     private static final String PASSWORD_RESET_TEMPLATE = """
             <html>
                 <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
-                    <h2>Password Reset</h2>
-                    <p>We received a request to reset your password for your Price Monitor account.</p>
-                    <p>Click the button below to set a new password:</p>
+                    <p>Otrzymaliśmy prośbę o zresetowanie hasła do Twojego konta w serwisie Price Monitor.</p>
+                    <p>Kliknij przycisk poniżej, aby ustawić nowe hasło:</p>
                     <p style="margin: 20px 0;">
                         <a href="%s" style="display: inline-block; padding: 10px 20px; color: #ffffff; background-color: #dc3545; text-decoration: none; border-radius: 5px; font-weight: bold;">
-                            Reset Password
+                            Zresetuj Hasło
                         </a>
                     </p>
                     <p style="font-size: 12px; color: #777;">
-                        If you did not request a password reset, you can safely ignore this email. Your password will remain unchanged.
+                        Jeśli nie wysyłałeś prośby o zresetowanie hasła, możesz spokojnie zignorować tę wiadomość. Twoje obecne hasło pozostanie bez zmian.
                     </p>
                 </body>
             </html>
@@ -58,11 +57,11 @@ public class EmailNotificationServiceImpl implements EmailNotificationService {
     private static final String ALERT_TEMPLATE = """
             <html>
                 <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
-                    <h2>Price Alert!</h2>
-                    <p>Price of the product you're tracking has dropped below the price you set!</p>
+                    <h2 style="color: #4f46e5;">ALERT CENOWY!</h2>
+                    <p>Cena przedmiotu, który monitorujesz, spadła poniżej ustalonej przez Ciebie kwoty!</p>
                     <p style="margin: 20px 0;">
                         <a href="%s" style="display: inline-block; padding: 10px 20px; color: #ffffff; background-color: #4f46e5; text-decoration: none; border-radius: 5px; font-weight: bold;">
-                            Check your product
+                            CSprawdź swój przedmiot
                         </a>
                     </p>
                 </body>

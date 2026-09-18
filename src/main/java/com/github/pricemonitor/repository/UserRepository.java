@@ -12,7 +12,7 @@ public interface UserRepository extends JpaRepository<UserEntity, Long> {
 
     Optional<UserEntity> findByPublicId(final UUID publicId);
 
-    Optional<UserEntity> findByEmail(final String email);
+    Optional<UserEntity> findByEmailAndVerifiedTrue(final String email);
 
     Optional<UserEntity> findByUsernameOrEmail(final String username, final String email);
 

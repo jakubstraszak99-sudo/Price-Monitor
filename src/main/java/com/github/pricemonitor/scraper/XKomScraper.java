@@ -17,7 +17,9 @@ public class XKomScraper extends ShopScraper {
     private static final String SHOP_NAME = "x-kom";
     private static final String TITLE_SELECTOR = "h1";
     private static final String PRODUCT_PRICE_SELECTOR = "div[data-name=productPrice] span";
-    private static final String PRICE_SPAN_SELECTOR = "div[id=app] span:contains(zł)";
+    private static final String PRODUCT_INFO_SELECTOR = "div[data-name=productInfo], div[data-name=productDetails]";
+    private static final String PRICE_TEXT_MATCH = "span:contains(zł)";
+    private static final String UNAVAILABLE_SELECTOR = "[data-name=productUnavailable], [data-name=notifyMeButton]";
 
     public XKomScraper(final WebDriverConfig webDriverConfig) {
         super(webDriverConfig);
@@ -26,6 +28,11 @@ public class XKomScraper extends ShopScraper {
     @Override
     public boolean supports(final String url) {
         return url != null && url.contains(X_KOM_DOMAIN);
+    }
+
+    @Override
+    protected boolean isAvailable(final Document doc) {
+        return doc.selectFirst(UNAVAILABLE_SELECTOR) == null && super.isAvailable(doc);
     }
 
     @Override
@@ -43,9 +50,12 @@ public class XKomScraper extends ShopScraper {
             return priceElement.text();
         }
 
-        final Element priceSpan = doc.selectFirst(PRICE_SPAN_SELECTOR);
-        if (priceSpan != null && StringUtils.isNotBlank(priceSpan.text())) {
-            return priceSpan.text();
+        final Element infoPanel = doc.selectFirst(PRODUCT_INFO_SELECTOR);
+        if (infoPanel != null) {
+            final Element priceSpan = infoPanel.selectFirst(PRICE_TEXT_MATCH);
+            if (priceSpan != null && StringUtils.isNotBlank(priceSpan.text())) {
+                return priceSpan.text();
+            }
         }
 
         return super.extractPrice(doc);

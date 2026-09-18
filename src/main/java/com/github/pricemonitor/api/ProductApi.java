@@ -62,7 +62,7 @@ public interface ProductApi {
     )
     @GetMapping
     ResponseEntity<ProductPage> getProducts(
-            @ParameterObject @PageableDefault(size = 20, sort = "name") final Pageable pageable,
+            @ParameterObject @PageableDefault(size = 24, sort = "name") final Pageable pageable,
             @Parameter(description = "Filter products by name (case-insensitive, partial match)")
             @RequestParam(required = false) final String search
     );

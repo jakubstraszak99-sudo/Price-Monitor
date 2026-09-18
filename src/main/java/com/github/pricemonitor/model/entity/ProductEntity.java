@@ -46,6 +46,10 @@ public class ProductEntity extends BaseEntity {
     @Column(length = 1000)
     private String faviconUrl;
 
+    @Column(nullable = false)
+    @Builder.Default
+    private Boolean available = true;
+
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     @ToString.Exclude
     @Builder.Default

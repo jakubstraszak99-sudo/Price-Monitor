@@ -40,13 +40,14 @@ class SteamScraperSpec extends Specification {
             price == expectedResult
 
         where:
-            html                                                                                         || expectedResult
-            "<html><body><div class='game_area_purchase_game'>Play for Free to Play</div></body></html>" || "0.00"
-            "<html><body><div class='discount_final_price'>99,99 zł</div></body></html>"                 || "99,99 zł"
-            "<html><body><div class='game_purchase_price'>49,99€</div></body></html>"                    || "49,99€"
-            "<html><body><div class='game_purchase_price'>Free</div></body></html>"                      || "0.00"
-            "<html><head><meta property='product:price:amount' content='19.99'/></head></html>"          || "19.99"
-            "<html><body>No price</body></html>"                                                         || null
+            html                                                                                                                                                                  || expectedResult
+            "<html><body><div class='game_area_purchase_game'>Play for Free to Play</div></body></html>"                                                                          || "0.00"
+            "<html><body><div class='game_area_purchase_game'><div class='discount_final_price'>99,99 zł</div></div></body></html>"                                               || "99,99 zł"
+            "<html><body><div class='game_area_purchase_game'><div class='game_purchase_price'>49,99€</div></div></body></html>"                                                  || "49,99€"
+            "<html><body><div class='game_area_purchase_game'><div class='game_purchase_price'>Free</div></div></body></html>"                                                    || "0.00"
+            "<html><body><div class='discount_final_price'>4,99 zł</div><div class='game_area_purchase_game'><div class='game_purchase_price'>99,99 zł</div></div></body></html>" || "99,99 zł"
+            "<html><head><meta property='product:price:amount' content='19.99'/></head></html>"                                                                                   || "19.99"
+            "<html><body>No price</body></html>"                                                                                                                                  || null
     }
 
     def "Should extract currency properly"() {

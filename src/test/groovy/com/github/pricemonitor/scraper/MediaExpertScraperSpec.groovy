@@ -41,11 +41,11 @@ class MediaExpertScraperSpec extends Specification {
             price == expectedResult
 
         where:
-            html                                                                                     || expectedResult
-            "<html><head><meta property='product:price:amount' content='3499.00'/></head></html>"    || "3499.00"
-            "<html><body><span class='whole'>4999</span><span class='cents'>99</span></body></html>" || "4999.99"
-            "<html><body><span class='whole'>5000</span></body></html>"                              || "5000"
-            "<html><body>Text</body></html>"                                                         || null
+            html                                                                                                                                                           || expectedResult
+            "<html><head><meta property='product:price:amount' content='3499.00'/></head></html>"                                                                          || "3499.00"
+            "<html><body><div class='product-main-section'><div class='main-price'><span class='whole'>4999</span><span class='cents'>99</span></div></div></body></html>" || "4999.99"
+            "<html><body><div class='product-main-section'><div class='main-price'><span class='whole'>5000</span></div></div></body></html>"                              || "5000"
+            "<html><body>Text</body></html>"                                                                                                                               || null
     }
 
 }

@@ -8,13 +8,14 @@ import com.github.pricemonitor.kafka.message.ScraperReplyMessage
 import com.github.pricemonitor.model.dto.ScrapedProduct
 import com.github.pricemonitor.model.entity.PriceAlertEntity
 import com.github.pricemonitor.model.entity.ProductEntity
-import com.github.pricemonitor.model.entity.UserEntity
 import com.github.pricemonitor.model.mapper.ProductMapperImpl
 import com.github.pricemonitor.model.page.ProductPage
 import com.github.pricemonitor.repository.ProductRepository
 import com.github.pricemonitor.service.impl.ProductServiceImpl
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.PageRequest
+import org.springframework.data.domain.Pageable
+import org.springframework.data.domain.Sort
 import spock.lang.Specification
 import spock.lang.Subject
 
@@ -100,7 +101,7 @@ class ProductServiceSpec extends Specification {
     def "Should fetch from Kafka when product is not in database"() {
         given:
             this.productRepository.findByProductUrl(this.url) >> Optional.empty()
-            def replyMessage = new ScraperReplyMessage(this.url, this.scrapedData, true, null)
+            def replyMessage = new ScraperReplyMessage(this.url, this.scrapedData, true, null, null)
 
         when:
             def result = this.service.getProductData(this.url)
@@ -113,7 +114,7 @@ class ProductServiceSpec extends Specification {
     def "Should throw exception when Kafka returns failure"() {
         given:
             this.productRepository.findByProductUrl(this.url) >> Optional.empty()
-            def replyMessage = new ScraperReplyMessage(this.url, this.scrapedData, false, "error")
+            def replyMessage = new ScraperReplyMessage(this.url, this.scrapedData, false, "error", null)
 
         when:
             this.service.getProductData(this.url)
@@ -127,7 +128,7 @@ class ProductServiceSpec extends Specification {
     def "Should throw exception when Kafka returns success but scrapedProduct is null"() {
         given:
             this.productRepository.findByProductUrl(this.url) >> Optional.empty()
-            def replyMessage = new ScraperReplyMessage(this.url, null, true, null)
+            def replyMessage = new ScraperReplyMessage(this.url, null, true, null, null)
 
         when:
             this.service.getProductData(this.url)
@@ -159,8 +160,10 @@ class ProductServiceSpec extends Specification {
             def result = this.service.getProducts(pageable, null)
 
         then:
-            1 * this.productRepository.findAll(pageable) >> entityPage
-            0 * this.productRepository.findByNameContainingIgnoreCase(_, _)
+            1 * this.productRepository.findAll({
+                Pageable p -> p.pageNumber == 0 && p.pageSize == 20 &&
+                        p.sort.getOrderFor("available")?.direction == Sort.Direction.DESC
+            }) >> entityPage
 
             result instanceof ProductPage
             result.content.size() == 2
@@ -178,8 +181,10 @@ class ProductServiceSpec extends Specification {
             def result = this.service.getProducts(pageable, null)
 
         then:
-            1 * this.productRepository.findAll(pageable) >> emptyPage
-            0 * this.productRepository.findByNameContainingIgnoreCase(_, _)
+            1 * this.productRepository.findAll({ Pageable p ->
+                p.sort.getOrderFor("available")?.direction == Sort.Direction.DESC
+            }) >> emptyPage
+            0 * this.productRepository.searchByNameOrShop(_, _)
 
             result instanceof ProductPage
             result.content.isEmpty()
@@ -197,7 +202,9 @@ class ProductServiceSpec extends Specification {
                     .currentPrice(this.price)
                     .build()
             def filteredPage = new PageImpl<ProductEntity>([entity1], pageable, 1)
-            this.productRepository.findByNameContainingIgnoreCase(searchTerm, pageable) >> filteredPage
+            this.productRepository.searchByNameOrShop(searchTerm, { Pageable p ->
+                p.sort.getOrderFor("available")?.direction == Sort.Direction.DESC
+            } as Pageable) >> filteredPage
 
         when:
             def result = this.service.getProducts(pageable, searchTerm)
@@ -215,7 +222,10 @@ class ProductServiceSpec extends Specification {
             def searchTerm = "nonexistent"
             def pageable = PageRequest.of(0, 20)
             def emptyPage = new PageImpl<ProductEntity>([], pageable, 0)
-            this.productRepository.findByNameContainingIgnoreCase(searchTerm, pageable) >> emptyPage
+            this.productRepository.searchByNameOrShop(searchTerm, { Pageable p ->
+                p.sort.getOrderFor("available")?.direction == Sort.Direction.DESC
+            } as Pageable) >> emptyPage
+
 
         when:
             def result = this.service.getProducts(pageable, searchTerm)
@@ -235,9 +245,27 @@ class ProductServiceSpec extends Specification {
             this.service.getProducts(pageable, "   ")
 
         then:
-            1 * this.productRepository.findAll(pageable) >> entityPage
-            0 * this.productRepository.findByNameContainingIgnoreCase(_, _)
+            1 * this.productRepository.findAll({ Pageable p ->
+                p.sort.getOrderFor("available")?.direction == Sort.Direction.DESC
+            }) >> entityPage
+            0 * this.productRepository.searchByNameOrShop(_, _)
     }
+
+    def "Should keep requested sort as secondary, after available desc"() {
+        given:
+            def pageable = PageRequest.of(0, 20, Sort.by(Sort.Direction.ASC, "name"))
+            def entityPage = new PageImpl<ProductEntity>([], pageable, 0)
+
+        when:
+            this.service.getProducts(pageable, null)
+
+        then:
+            1 * this.productRepository.findAll({ Pageable p ->
+                def orders = p.sort.toList()
+                orders[0].property == "available" && orders[0].direction == Sort.Direction.DESC &&
+                        orders[1].property == "name" && orders[1].direction == Sort.Direction.ASC
+            }) >> entityPage
+        }
 
     def "Should update product parameters and notify users when price changes"() {
         given:
@@ -304,6 +332,54 @@ class ProductServiceSpec extends Specification {
             existingProduct.name == this.scrapedData.name()
             existingProduct.imageUrl == this.scrapedData.imageUrl().toString()
             existingProduct.faviconUrl == this.scrapedData.faviconUrl().toString()
+    }
+
+    def "Should mark product unavailable and remove its price alerts"() {
+        given:
+            def alert = new PriceAlertEntity()
+            def existingProduct = new ProductEntity(
+                    productUrl: this.url,
+                    priceAlerts: [alert]
+            )
+            this.productRepository.findByProductUrl(this.url) >> Optional.of(existingProduct)
+
+        when:
+            this.service.markUnavailable(this.url)
+
+        then:
+            !existingProduct.getAvailable()
+            existingProduct.getPriceAlerts().isEmpty()
+    }
+
+
+    def "Should do nothing when marking an unknown product unavailable"() {
+        given:
+            this.productRepository.findByProductUrl(this.url) >> Optional.empty()
+
+        when:
+            this.service.markUnavailable(this.url)
+
+        then:
+            noExceptionThrown()
+    }
+
+    def "Should mark product available again when it is successfully re-scraped"() {
+        given:
+            def existingProduct = new ProductEntity(
+                    productUrl: this.url,
+                    currentPrice: this.price,
+                    name: this.scrapedData.name(),
+                    imageUrl: this.scrapedData.imageUrl().toString(),
+                    faviconUrl: this.scrapedData.faviconUrl().toString(),
+                    available: false
+            )
+            this.productRepository.findByProductUrl(this.url) >> Optional.of(existingProduct)
+
+        when:
+            this.service.updateProduct(this.url, this.scrapedData)
+
+        then:
+            existingProduct.getAvailable()
     }
 
     def "Should publish async request for price check"() {

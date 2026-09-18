@@ -17,4 +17,9 @@ public class PmRuntimeException extends RuntimeException {
         this.code = code;
     }
 
+    public PmRuntimeException(final ExceptionCode code, final String info) {
+        super(String.format("%s: %s: %s", code.name(), code.getMessage(), info));
+        this.code = code;
+    }
+
 }

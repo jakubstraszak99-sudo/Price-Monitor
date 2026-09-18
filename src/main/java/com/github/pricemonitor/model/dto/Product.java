@@ -13,5 +13,6 @@ public record Product(
         BigDecimal currentPrice,
         LocalDateTime lastUpdated,
         String shop,
-        URI faviconUrl
+        URI faviconUrl,
+        Boolean available
 ) {}

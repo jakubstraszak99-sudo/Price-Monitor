@@ -69,7 +69,7 @@ public interface PriceAlertApi {
     )
     @GetMapping
     ResponseEntity<PriceAlertPage> getAlerts(
-            @ParameterObject @PageableDefault(size = 20, sort = "createdAt") final Pageable pageable,
+            @ParameterObject @PageableDefault(size = 24, sort = "createdAt") final Pageable pageable,
             @Parameter(description = "Filter price alerts by product name (case-insensitive, partial match)")
             @RequestParam(required = false) final String search,
             @AuthenticationPrincipal final UUID userPublicId
@@ -80,7 +80,9 @@ public interface PriceAlertApi {
             @ApiResponse(
                     responseCode = "200",
                     description = "Price alert updated successfully",
-                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = PriceAlert.class))
+                    content = @Content(
+                            mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = PriceAlert.class))
             ),
             @ApiResponse(
                     responseCode = "404",

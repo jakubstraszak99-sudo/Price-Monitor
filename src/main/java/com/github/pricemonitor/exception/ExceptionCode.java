@@ -22,7 +22,8 @@ public enum ExceptionCode {
     E012("A network problem occurred while connecting", HttpStatus.BAD_GATEWAY),
     E013("Failed to receive data", HttpStatus.GATEWAY_TIMEOUT),
     E014("Price alert already exists", HttpStatus.CONFLICT),
-    E015("Price alert not found", HttpStatus.NOT_FOUND);
+    E015("Price alert not found", HttpStatus.NOT_FOUND),
+    E016("Product appears to be unavailable", HttpStatus.UNPROCESSABLE_CONTENT);
 
     private final String message;
     private final HttpStatus status;

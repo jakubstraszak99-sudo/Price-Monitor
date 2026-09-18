@@ -118,7 +118,7 @@ class PriceAlertServiceSpec extends Specification {
 
         then:
             1 * priceAlertRepository.findByUserPublicId(userPublicId, pageable) >> entitiesPage
-            0 * priceAlertRepository.findByUserPublicIdAndProductNameContainingIgnoreCase(_, _, _)
+            0 * priceAlertRepository.searchAlertsByUserAndProductOrShop(_, _, _)
 
             result instanceof PriceAlertPage
             result.content.size() == 1
@@ -142,7 +142,7 @@ class PriceAlertServiceSpec extends Specification {
             def result = this.service.getPriceAlerts(pageable, searchTerm, userPublicId)
 
         then:
-            1 * priceAlertRepository.findByUserPublicIdAndProductNameContainingIgnoreCase(userPublicId, searchTerm, pageable) >> filteredPage
+            1 * priceAlertRepository.searchAlertsByUserAndProductOrShop(userPublicId, searchTerm, pageable) >> filteredPage
             0 * priceAlertRepository.findByUserPublicId(_, _)
 
             result instanceof PriceAlertPage
@@ -162,7 +162,7 @@ class PriceAlertServiceSpec extends Specification {
             def result = this.service.getPriceAlerts(pageable, searchTerm, userPublicId)
 
         then:
-            1 * this.priceAlertRepository.findByUserPublicIdAndProductNameContainingIgnoreCase(userPublicId, searchTerm, pageable) >> emptyPage
+            1 * this.priceAlertRepository.searchAlertsByUserAndProductOrShop(userPublicId, searchTerm, pageable) >> emptyPage
 
             result instanceof PriceAlertPage
             result.content.isEmpty()

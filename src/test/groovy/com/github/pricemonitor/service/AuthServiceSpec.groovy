@@ -111,7 +111,6 @@ class AuthServiceSpec extends Specification {
 
         then:
             user.getVerified()
-            1 * this.userRepository.save(user)
     }
 
     def "Should throw exception when verifying non-existent user"() {

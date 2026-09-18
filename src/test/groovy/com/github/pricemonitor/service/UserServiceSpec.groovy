@@ -117,7 +117,7 @@ class UserServiceSpec extends Specification {
     def "Should generate token and publish event"() {
         given:
             def user = new UserEntity(publicId: this.userId, email: this.userEmail)
-            this.userRepository.findByEmail(this.userEmail) >> Optional.of(user)
+            this.userRepository.findByEmailAndVerifiedTrue(this.userEmail) >> Optional.of(user)
 
             def resetToken = "reset-token-123"
             this.tokenProvider.generateVerificationToken(this.userId) >> resetToken

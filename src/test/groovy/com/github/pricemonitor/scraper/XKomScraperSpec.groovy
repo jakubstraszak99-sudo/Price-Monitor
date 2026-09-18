@@ -42,9 +42,26 @@ class XKomScraperSpec extends Specification{
         where:
             html                                                                                     || expectedResult
             "<html><body><div data-name='productPrice'><span>4 999,00 zł</span></div></body></html>" || "4 999,00 zł"
-            "<html><body><div id='app'><span>3 499,00 zł</span></div></body></html>"                 || "3 499,00 zł"
+            "<html><body><div data-name='productInfo'><span>3 499,00 zł</span></div></body></html>"  || "3 499,00 zł"
+            "<html><body><div id='app'><span>3 499,00 zł</span></div></body></html>"                 || null
             "<html><head><meta property='product:price:amount' content='2999.99'/></head></html>"    || "2999.99"
             "<html><body>Text</body></html>"                                                         || null
+    }
+
+    def "Should treat page as unavailable when the unavailable marker is present"() {
+        given:
+            def doc = Jsoup.parse("<html><body><div data-name='productUnavailable'>Produkt niedostępny</div></body></html>")
+
+        expect:
+            !this.scraper.isAvailable(doc)
+    }
+
+    def "Should treat page as available when there is no unavailable marker"() {
+        given:
+            def doc = Jsoup.parse("<html><body><div data-name='productPrice'><span>100 zł</span></div></body></html>")
+
+        expect:
+            this.scraper.isAvailable(doc)
     }
 
 }

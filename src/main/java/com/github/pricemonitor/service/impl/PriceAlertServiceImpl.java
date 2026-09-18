@@ -62,7 +62,7 @@ public class PriceAlertServiceImpl implements PriceAlertService {
                                          final String search,
                                          final UUID userPublicId) {
         final Page<PriceAlertEntity> alerts = (search != null && !search.isBlank())
-                ? this.priceAlertRepository.findByUserPublicIdAndProductNameContainingIgnoreCase(userPublicId, search, pageable)
+                ? this.priceAlertRepository.searchAlertsByUserAndProductOrShop(userPublicId, search, pageable)
                 : this.priceAlertRepository.findByUserPublicId(userPublicId, pageable);
 
         final Page<PriceAlert> page = alerts.map(this.priceAlertMapper::map);

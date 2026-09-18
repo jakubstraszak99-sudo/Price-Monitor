@@ -16,7 +16,9 @@ import com.github.pricemonitor.service.ProductService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -58,18 +60,28 @@ public class ProductServiceImpl implements ProductService {
     @Override
     @Transactional(readOnly = true)
     public ProductPage getProducts(final Pageable pageable, final String search) {
+        final Pageable pageableWithAvailabilityFirst = this.prioritizeAvailable(pageable);
         final Page<ProductEntity> products = (search != null && !search.isBlank())
-                ? this.productRepository.findByNameContainingIgnoreCase(search, pageable)
-                : this.productRepository.findAll(pageable);
+                ? this.productRepository.searchByNameOrShop(search, pageableWithAvailabilityFirst)
+                : this.productRepository.findAll(pageableWithAvailabilityFirst);
         final Page<Product> page = products.map(this.productMapper::map);
         return new ProductPage(page.getContent(), pageable, page.getTotalElements());
     }
 
+
     @Override
     @Transactional
     public void updateProduct(final String productUrl, final ScrapedProduct scrapedProduct) {
-        this.productRepository.findByProductUrl(productUrl)
-                .ifPresent(product -> this.updateProductData(product, scrapedProduct));
+        this.findProduct(productUrl).ifPresent(product -> this.updateProductData(product, scrapedProduct));
+    }
+
+    @Override
+    @Transactional
+    public void markUnavailable(String productUrl) {
+        this.findProduct(productUrl).ifPresent(product -> {
+            product.setAvailable(false);
+            product.getPriceAlerts().clear();
+        });
     }
 
     @Override
@@ -80,6 +92,11 @@ public class ProductServiceImpl implements ProductService {
 
     private Optional<ProductEntity> findProduct(final String url) {
         return this.productRepository.findByProductUrl(url);
+    }
+
+    private Pageable prioritizeAvailable(final Pageable pageable) {
+        final Sort availableFirst = Sort.by(Sort.Order.desc("available")).and(pageable.getSort());
+        return PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), availableFirst);
     }
 
     private ScrapedProduct fetchFromUrl(final String url) {
@@ -105,6 +122,7 @@ public class ProductServiceImpl implements ProductService {
         this.updateName(product, data.name());
         this.updateImage(product, data.imageUrl());
         this.updateFavicon(product, data.faviconUrl());
+        product.setAvailable(true);
     }
 
     private void updatePrice(final ProductEntity product, final BigDecimal newPrice) {

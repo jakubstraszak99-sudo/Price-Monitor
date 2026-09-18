@@ -18,14 +18,10 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 import java.math.BigDecimal;
 import java.net.URI;
 import java.time.Duration;
-import java.util.Currency;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Stream;
 
-import static com.github.pricemonitor.exception.ExceptionCode.E010;
-import static com.github.pricemonitor.exception.ExceptionCode.E012;
+import static com.github.pricemonitor.exception.ExceptionCode.*;
 
 @RequiredArgsConstructor(access = AccessLevel.PROTECTED)
 public abstract class ShopScraper {
@@ -42,6 +38,20 @@ public abstract class ShopScraper {
     private static final String DEFAULT_CURRENCY_KEY = "zł";
     private static final String GOOGLE_FAVICON_URL_TEMPLATE = "https://www.google.com/s2/favicons?domain=%s&sz=64";
 
+    private static final List<String> UNAVAILABILITY_PHRASES = List.of(
+            "obecnie niedostępny",
+            "produkt niedostępny",
+            "chwilowo niedostępny",
+            "brak w magazynie",
+            "brak towaru",
+            "wyprzedane",
+            "produkt wycofany",
+            "currently unavailable",
+            "out of stock",
+            "no longer available",
+            "sold out"
+    );
+
     protected static final Map<String, String> CURRENCY_SYMBOLS = Map.of(
             "zł", "PLN",
             "€", "EUR",
@@ -54,6 +64,11 @@ public abstract class ShopScraper {
 
     public ScrapedProduct scrape(final String url) {
         final Document doc = this.getDocument(url);
+
+        if (!this.isAvailable(doc)) {
+            throw new PmRuntimeException(E016, url);
+        }
+
         final String name = this.extractName(doc);
         final String price = this.extractPrice(doc);
         final String imageUrl = this.extractImage(doc);
@@ -62,13 +77,18 @@ public abstract class ShopScraper {
         final String faviconUrl = this.extractFavicon(doc, url);
 
         if (StringUtils.isBlank(name) || StringUtils.isBlank(price)) {
-            throw new PmRuntimeException(E010);
+            throw new PmRuntimeException(E010, url);
         }
 
         return new ScrapedProduct(name, this.parsePrice(price), URI.create(imageUrl), currency, shop, URI.create(faviconUrl));
     }
 
     public abstract boolean supports(final String url);
+
+    protected boolean isAvailable(final Document doc) {
+        final String pageText = doc.text().toLowerCase();
+        return UNAVAILABILITY_PHRASES.stream().noneMatch(pageText::contains);
+    }
 
     protected String extractName(final Document doc) {
         return Optional.ofNullable(doc.selectFirst(OG_TITLE_SELECTOR))

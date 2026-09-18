@@ -15,6 +15,8 @@ public interface ProductService {
 
     void updateProduct(final String productUrl, final ScrapedProduct scrapedProduct);
 
+    void markUnavailable(final String productUrl);
+
     void requestProductCheck(final String url);
 
 }

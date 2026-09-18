@@ -22,7 +22,10 @@ public interface PriceAlertRepository extends JpaRepository<PriceAlertEntity, Lo
     Page<PriceAlertEntity> findByUserPublicId(final UUID userPublicId, final Pageable pageable);
 
     @EntityGraph(attributePaths = "product")
-    Page<PriceAlertEntity> findByUserPublicIdAndProductNameContainingIgnoreCase(final UUID userPublicId, final String search, final Pageable pageable);
+    @Query("SELECT a FROM PriceAlertEntity a WHERE a.user.publicId = :userPublicId " +
+            "AND (LOWER(a.product.name) LIKE LOWER(CONCAT('%', :search, '%')) " +
+            "OR LOWER(a.product.shop) LIKE LOWER(CONCAT('%', :search, '%')))")
+    Page<PriceAlertEntity> searchAlertsByUserAndProductOrShop(final UUID userPublicId, final String search, final Pageable pageable);
 
     Optional<PriceAlertEntity> findByPublicId(final UUID publicId);
 

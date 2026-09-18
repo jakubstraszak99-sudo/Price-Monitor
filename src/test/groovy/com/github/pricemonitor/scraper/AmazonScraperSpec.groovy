@@ -72,4 +72,68 @@ class AmazonScraperSpec extends Specification {
             image == "https://amazon.com/high-res-image.jpg"
     }
 
+    def "Should ignore decoy price outside the buy-box container (regression for unavailable-product bug)"() {
+        given:
+            def html = """
+                <html>
+                    <body>
+                        <div id="corePriceDisplay_desktop_feature_div">
+                            <span class="a-price"><span class="a-offscreen">299,99 zł</span></span>
+                        </div>
+                        <div id="sims-consolidated-1_feature_div">
+                            <span class="a-price"><span class="a-offscreen">89,00 zł</span></span>
+                        </div>
+                    </body>
+                </html>
+            """
+            def doc = Jsoup.parse(html)
+
+        when:
+            def price = scraper.extractPrice(doc)
+
+        then:
+            price == "299,99 zł"
+    }
+
+    def "Should fall back to page-wide search when no known buy-box container is present"() {
+        given:
+            def html = '<html><span class="a-price"><span class="a-offscreen">123,45 zł</span></span></html>'
+            def doc = Jsoup.parse(html)
+
+        when:
+            def price = scraper.extractPrice(doc)
+
+        then:
+            price == "123,45 zł"
+    }
+
+    def "Should treat product as unavailable when #outOfStock is present"() {
+        given:
+            def doc = Jsoup.parse("<html><body><div id='outOfStock'>Currently unavailable</div></body></html>")
+
+        expect:
+            !scraper.isAvailable(doc)
+    }
+
+    def "Should treat product as unavailable when availability block has no buy button"() {
+        given:
+            def doc = Jsoup.parse("<html><body><div id='availability'><span>Chwilowo niedostępny</span></div></body></html>")
+
+        expect:
+            !scraper.isAvailable(doc)
+    }
+
+    def "Should treat product as available when a buy button is present alongside availability info"() {
+        given:
+            def doc = Jsoup.parse("""
+                <html><body>
+                    <div id='availability'><span>In stock</span></div>
+                    <button id='add-to-cart-button'>Add to cart</button>
+                </body></html>
+            """)
+
+        expect:
+            scraper.isAvailable(doc)
+    }
+
 }

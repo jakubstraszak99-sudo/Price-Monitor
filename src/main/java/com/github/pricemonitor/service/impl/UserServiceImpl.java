@@ -12,7 +12,6 @@ import com.github.pricemonitor.repository.UserRepository;
 import com.github.pricemonitor.security.TokenProvider;
 import com.github.pricemonitor.service.UserService;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,7 +21,6 @@ import java.util.UUID;
 import static com.github.pricemonitor.exception.ExceptionCode.*;
 import static com.github.pricemonitor.kafka.KafkaConstants.PASSWORD_RESET_TOPIC;
 
-@Slf4j
 @Service
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
@@ -66,7 +64,7 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public void forgotPassword(final String email) {
-        this.userRepository.findByEmail(email).ifPresentOrElse(
+        this.userRepository.findByEmailAndVerifiedTrue(email).ifPresent(
                 user -> {
                     final String resetToken = this.tokenProvider.generateVerificationToken(user.getPublicId());
                     this.passwordResetTokenRedisRepository.save(PasswordResetToken.builder()
@@ -76,7 +74,7 @@ public class UserServiceImpl implements UserService {
 
                     final EmailNotificationMessage event = new EmailNotificationMessage(user.getEmail(), resetToken);
                     this.eventPublisher.publish(PASSWORD_RESET_TOPIC, user.getEmail(), event);
-                    }, () -> log.warn("Password reset requested for non-existent email: {}", email)
+                }
         );
     }
 

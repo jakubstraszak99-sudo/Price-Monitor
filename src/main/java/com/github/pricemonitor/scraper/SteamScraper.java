@@ -74,8 +74,14 @@ public class SteamScraper extends ShopScraper {
     }
 
     private Optional<String> findPrice(final Document doc) {
+        final Element primaryPurchaseBlock = doc.selectFirst(PURCHASE_GAME_SELECTOR);
+
+        if (primaryPurchaseBlock == null) {
+            return Optional.empty();
+        }
+
         return Stream.of(DISCOUNT_PRICE_SELECTOR, PURCHASE_PRICE_SELECTOR)
-                .map(doc::selectFirst)
+                .map(primaryPurchaseBlock::selectFirst)
                 .filter(Objects::nonNull)
                 .map(Element::text)
                 .filter(StringUtils::isNotBlank)

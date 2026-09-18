@@ -17,10 +17,8 @@ public class MediaExpertScraper extends ShopScraper {
     private static final String SHOP_NAME = "Media Expert";
     private static final String TITLE_SELECTOR = "h1.is-title";
     private static final String FALLBACK_TITLE_SELECTOR = "h1";
-    private static final String MAIN_PRICE_WHOLE_SELECTOR = ".main-price span.whole, .price.is-big span.whole";
-    private static final String MAIN_PRICE_CENTS_SELECTOR = ".main-price span.cents, .price.is-big span.cents";
-    private static final String FALLBACK_PRICE_WHOLE_SELECTOR = "span.whole";
-    private static final String FALLBACK_PRICE_CENTS_SELECTOR = "span.cents";
+    private static final String MAIN_PRICE_WHOLE_SELECTOR = ".product-main-section .main-price span.whole";
+    private static final String MAIN_PRICE_CENTS_SELECTOR = ".product-main-section .main-price span.cents";
 
     public MediaExpertScraper(final WebDriverConfig webDriverConfig) {
         super(webDriverConfig);
@@ -46,16 +44,11 @@ public class MediaExpertScraper extends ShopScraper {
         Element wholeElement = doc.selectFirst(MAIN_PRICE_WHOLE_SELECTOR);
         Element centsElement = doc.selectFirst(MAIN_PRICE_CENTS_SELECTOR);
 
-        if (wholeElement == null) {
-            wholeElement = doc.selectFirst(FALLBACK_PRICE_WHOLE_SELECTOR);
-            centsElement = doc.selectFirst(FALLBACK_PRICE_CENTS_SELECTOR);
-        }
-
         if (wholeElement != null) {
-            String price = wholeElement.text().replaceAll("[^0-9]", "");
+            String price = wholeElement.text().replaceAll("\\D", "");
 
             if (centsElement != null) {
-                price += "." + centsElement.text().replaceAll("[^0-9]", "");
+                price += "." + centsElement.text().replaceAll("\\D", "");
             }
 
             return price;

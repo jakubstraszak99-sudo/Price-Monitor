@@ -70,8 +70,6 @@ public class AuthServiceImpl implements AuthService {
         }
 
         user.setVerified(true);
-        userRepository.save(user);
-
         return this.createTokenSet(user.getPublicId());
     }
 

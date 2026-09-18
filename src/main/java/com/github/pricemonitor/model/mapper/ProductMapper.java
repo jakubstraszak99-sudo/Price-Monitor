@@ -17,6 +17,7 @@ public interface ProductMapper {
     @Mapping(target = "currentPrice", source = "data.price")
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "lastUpdated", ignore = true)
+    @Mapping(target = "available", ignore = true)
     @Mapping(target = "priceHistories", ignore = true)
     @Mapping(target = "priceAlerts", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
