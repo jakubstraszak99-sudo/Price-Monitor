@@ -61,13 +61,13 @@ class SteamScraperSpec extends Specification {
             currency?.getCurrencyCode() == expectedResult
 
         where:
-            html                                                                         || expectedResult
-            "<html><body><div class='discount_final_price'>99,99 zł</div></body></html>" || "PLN"
-            "<html><body><div class='game_purchase_price'>49,99€</div></body></html>"    || "EUR"
-            "<html><body><div class='game_purchase_price'>19.99\$</div></body></html>"   || "USD"
-            "<html><body><div class='game_purchase_price'>10.00£</div></body></html>"    || "GBP"
-            "<html><body><div class='game_purchase_price'>10.00 kr</div></body></html>"  || "SEK"
-            "<html><body>1 NSC (Not supported currency)</body></html>"                   || "PLN"
+            html                                                                                                                    || expectedResult
+            "<html><body><div class='game_area_purchase_game'><div class='discount_final_price'>99,99 zł</div></div></body></html>" || "PLN"
+            "<html><body><div class='game_area_purchase_game'><div class='game_purchase_price'>49,99€</div></div></body></html>"    || "EUR"
+            "<html><body><div class='game_area_purchase_game'><div class='game_purchase_price'>19.99\$</div></div></body></html>"   || "USD"
+            "<html><body><div class='game_area_purchase_game'><div class='game_purchase_price'>10.00£</div></div></body></html>"    || "GBP"
+            "<html><body><div class='game_area_purchase_game'><div class='game_purchase_price'>10.00 kr</div></div></body></html>"  || "SEK"
+            "<html><body>1 NSC (Not supported currency)</body></html>"                                                              || "PLN"
     }
 
 }

@@ -21,6 +21,7 @@ public interface ProductMapper {
     @Mapping(target = "priceHistories", ignore = true)
     @Mapping(target = "priceAlerts", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "notifications", ignore = true)
     ProductEntity map(final ScrapedProduct data, final String url);
 
     @Mapping(target = "price", source = "currentPrice")

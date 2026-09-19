@@ -8,6 +8,7 @@ import com.github.pricemonitor.kafka.message.ScraperReplyMessage
 import com.github.pricemonitor.model.dto.ScrapedProduct
 import com.github.pricemonitor.model.entity.PriceAlertEntity
 import com.github.pricemonitor.model.entity.ProductEntity
+import com.github.pricemonitor.model.entity.UserEntity
 import com.github.pricemonitor.model.mapper.ProductMapperImpl
 import com.github.pricemonitor.model.page.ProductPage
 import com.github.pricemonitor.repository.ProductRepository
@@ -27,6 +28,7 @@ class ProductServiceSpec extends Specification {
     def eventPublisher = Mock(KafkaEventPublisher)
     def priceHistoryService = Mock(PriceHistoryService)
     def priceAlertNotificationService = Mock(PriceAlertNotificationService)
+    def notificationService = Mock(NotificationService)
     def productMapper = new ProductMapperImpl()
 
     @Subject
@@ -35,7 +37,8 @@ class ProductServiceSpec extends Specification {
             this.productMapper,
             this.eventPublisher,
             this.priceHistoryService,
-            this.priceAlertNotificationService
+            this.priceAlertNotificationService,
+            this.notificationService
     )
 
     def url = "https://example.com/product"
@@ -334,9 +337,10 @@ class ProductServiceSpec extends Specification {
             existingProduct.faviconUrl == this.scrapedData.faviconUrl().toString()
     }
 
-    def "Should mark product unavailable and remove its price alerts"() {
+    def "Should mark product as unavailable and remove its price alerts"() {
         given:
-            def alert = new PriceAlertEntity()
+            def user = new UserEntity(email: "user@example.com")
+            def alert = new PriceAlertEntity(user: user)
             def existingProduct = new ProductEntity(
                     productUrl: this.url,
                     priceAlerts: [alert]
@@ -349,7 +353,9 @@ class ProductServiceSpec extends Specification {
         then:
             !existingProduct.getAvailable()
             existingProduct.getPriceAlerts().isEmpty()
+            1 * this.notificationService.notifyProductUnavailable(user, existingProduct)
     }
+
 
 
     def "Should do nothing when marking an unknown product unavailable"() {
@@ -363,7 +369,7 @@ class ProductServiceSpec extends Specification {
             noExceptionThrown()
     }
 
-    def "Should mark product available again when it is successfully re-scraped"() {
+    def "Should mark product as available again when it is successfully re-scraped"() {
         given:
             def existingProduct = new ProductEntity(
                     productUrl: this.url,

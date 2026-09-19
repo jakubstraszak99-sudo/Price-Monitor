@@ -42,4 +42,9 @@ public class UserEntity extends BaseEntity {
     @Builder.Default
     private List<PriceAlertEntity> priceAlerts = new ArrayList<>();
 
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @ToString.Exclude
+    @Builder.Default
+    private List<NotificationEntity> notifications = new ArrayList<>();
+
 }

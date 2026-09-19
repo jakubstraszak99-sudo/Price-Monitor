@@ -60,4 +60,9 @@ public class ProductEntity extends BaseEntity {
     @Builder.Default
     private List<PriceAlertEntity> priceAlerts = new ArrayList<>();
 
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL)
+    @ToString.Exclude
+    @Builder.Default
+    private List<NotificationEntity> notifications = new ArrayList<>();
+
 }

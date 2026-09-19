@@ -3,7 +3,7 @@ package com.github.pricemonitor.service.impl;
 import com.github.pricemonitor.exception.PmRuntimeException;
 import com.github.pricemonitor.kafka.KafkaEventPublisher;
 import com.github.pricemonitor.kafka.message.EmailNotificationMessage;
-import com.github.pricemonitor.model.dto.AccessTokenExpiryInfo;
+import com.github.pricemonitor.model.dto.AccessTokenExpiryData;
 import com.github.pricemonitor.model.dto.AuthTokenSet;
 import com.github.pricemonitor.model.entity.UserEntity;
 import com.github.pricemonitor.redis.model.RefreshToken;
@@ -95,13 +95,13 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public AccessTokenExpiryInfo refreshToken(final String refreshTokenValue) {
+    public AccessTokenExpiryData refreshToken(final String refreshTokenValue) {
         final RefreshToken refreshToken = this.redisRepository.findById(refreshTokenValue)
                 .orElseThrow(() -> new PmRuntimeException(E009));
         final String accessToken = this.tokenProvider.generateAccessToken(refreshToken.getUserPublicId());
         final long accessExpirationSeconds = this.tokenProvider.getAccessExpirationInSeconds();
 
-        return new AccessTokenExpiryInfo(accessToken, accessExpirationSeconds);
+        return new AccessTokenExpiryData(accessToken, accessExpirationSeconds);
     }
 
     private AuthTokenSet createTokenSet(final UUID userPublicId) {

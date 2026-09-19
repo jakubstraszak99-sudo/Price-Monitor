@@ -4,6 +4,7 @@ import com.github.pricemonitor.kafka.KafkaEventPublisher;
 import com.github.pricemonitor.kafka.message.EmailNotificationMessage;
 import com.github.pricemonitor.model.entity.ProductEntity;
 import com.github.pricemonitor.repository.PriceAlertRepository;
+import com.github.pricemonitor.service.NotificationService;
 import com.github.pricemonitor.service.PriceAlertNotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -19,6 +20,7 @@ public class PriceAlertNotificationServiceImpl implements PriceAlertNotification
 
     private final PriceAlertRepository priceAlertRepository;
     private final KafkaEventPublisher eventPublisher;
+    private final NotificationService notificationService;
 
     @Override
     @Transactional
@@ -27,6 +29,7 @@ public class PriceAlertNotificationServiceImpl implements PriceAlertNotification
             final String email = alert.getUser().getEmail();
             final EmailNotificationMessage event = new EmailNotificationMessage(email, product.getProductUrl());
             this.eventPublisher.publish(ALERT_NOTIFICATION_TOPIC, email, event);
+            this.notificationService.notifyPriceDrop(alert.getUser(), product, newPrice);
             alert.setActive(false);
         });
     }

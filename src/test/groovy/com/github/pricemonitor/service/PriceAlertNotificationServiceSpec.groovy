@@ -15,11 +15,13 @@ class PriceAlertNotificationServiceSpec extends Specification {
 
     def priceAlertRepository = Mock(PriceAlertRepository)
     def eventPublisher = Mock(KafkaEventPublisher)
+    def notificationService = Mock(NotificationService)
 
     @Subject
     def service = new PriceAlertNotificationServiceImpl(
             this.priceAlertRepository,
-            this.eventPublisher
+            this.eventPublisher,
+            this.notificationService
     )
 
     def "Should notify user when product price reaches target price"() {
@@ -40,8 +42,9 @@ class PriceAlertNotificationServiceSpec extends Specification {
                 it instanceof EmailNotificationMessage &&
                         it.email() == "user@example.com" &&
                         it.item() == "https://example.com/product"
-            }
-        )
+                }
+            )
+            1 * this.notificationService.notifyPriceDrop(user, product, newPrice)
     }
 
     def "Should not publish notification when there are no active alerts"() {
@@ -56,5 +59,7 @@ class PriceAlertNotificationServiceSpec extends Specification {
         then:
             1 * this.priceAlertRepository.findActiveAlertsForProduct(product.getId(), newPrice) >> Collections.emptyList()
             0 * this.eventPublisher.publish(_, _, _)
+            0 * this.notificationService.notifyPriceDrop(*_)
     }
+
 }

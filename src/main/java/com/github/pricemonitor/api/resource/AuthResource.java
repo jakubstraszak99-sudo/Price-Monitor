@@ -1,7 +1,7 @@
 package com.github.pricemonitor.api.resource;
 
 import com.github.pricemonitor.api.AuthApi;
-import com.github.pricemonitor.model.dto.AccessTokenExpiryInfo;
+import com.github.pricemonitor.model.dto.AccessTokenExpiryData;
 import com.github.pricemonitor.model.dto.AuthTokenSet;
 import com.github.pricemonitor.model.request.user.UserLoginRequest;
 import com.github.pricemonitor.model.request.user.UserRegisterRequest;
@@ -77,11 +77,11 @@ public class AuthResource implements AuthApi {
 
     @Override
     public ResponseEntity<Void> refreshToken() {
-        final AccessTokenExpiryInfo accessTokenExpiryInfo = this.authService.refreshToken(this.getRefreshToken());
+        final AccessTokenExpiryData data = this.authService.refreshToken(this.getRefreshToken());
         return ResponseEntity.status(HttpStatus.OK)
                 .header(HttpHeaders.SET_COOKIE, this.buildAccessCookie(
-                        accessTokenExpiryInfo.accessToken(),
-                        accessTokenExpiryInfo.accessExpirationSeconds())
+                        data.accessToken(),
+                        data.accessExpirationSeconds())
                         .toString())
                 .build();
     }

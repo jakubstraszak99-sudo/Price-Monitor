@@ -10,6 +10,7 @@ import com.github.pricemonitor.model.entity.ProductEntity;
 import com.github.pricemonitor.model.mapper.ProductMapper;
 import com.github.pricemonitor.model.page.ProductPage;
 import com.github.pricemonitor.repository.ProductRepository;
+import com.github.pricemonitor.service.NotificationService;
 import com.github.pricemonitor.service.PriceAlertNotificationService;
 import com.github.pricemonitor.service.PriceHistoryService;
 import com.github.pricemonitor.service.ProductService;
@@ -41,6 +42,7 @@ public class ProductServiceImpl implements ProductService {
     private final KafkaEventPublisher eventPublisher;
     private final PriceHistoryService priceHistoryService;
     private final PriceAlertNotificationService priceAlertNotificationService;
+    private final NotificationService notificationService;
 
     @Override
     @Transactional
@@ -77,9 +79,11 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional
-    public void markUnavailable(String productUrl) {
+    public void markUnavailable(final String productUrl) {
         this.findProduct(productUrl).ifPresent(product -> {
             product.setAvailable(false);
+            product.getPriceAlerts().forEach(alert ->
+                    this.notificationService.notifyProductUnavailable(alert.getUser(), product));
             product.getPriceAlerts().clear();
         });
     }

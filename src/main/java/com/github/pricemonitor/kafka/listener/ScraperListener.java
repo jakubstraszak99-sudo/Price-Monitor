@@ -49,6 +49,8 @@ public class ScraperListener {
             if (message.errorCode() == E016) {
                 this.productService.markUnavailable(message.url());
             }
+
+            return;
         }
 
         this.productService.updateProduct(message.url(), message.scrapedProduct());

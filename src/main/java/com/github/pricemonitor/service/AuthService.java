@@ -1,6 +1,6 @@
 package com.github.pricemonitor.service;
 
-import com.github.pricemonitor.model.dto.AccessTokenExpiryInfo;
+import com.github.pricemonitor.model.dto.AccessTokenExpiryData;
 import com.github.pricemonitor.model.dto.AuthTokenSet;
 
 public interface AuthService {
@@ -13,6 +13,6 @@ public interface AuthService {
 
     void logout(final String refreshTokenValue);
 
-    AccessTokenExpiryInfo refreshToken(final String refreshTokenValue);
+    AccessTokenExpiryData refreshToken(final String refreshTokenValue);
 
 }

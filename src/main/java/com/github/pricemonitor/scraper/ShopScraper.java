@@ -10,9 +10,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
-import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
 import java.math.BigDecimal;
@@ -36,9 +35,13 @@ public abstract class ShopScraper {
     private static final String CONTENT_ATTR = "content";
     private static final String ABS_HREF_ATTR = "abs:href";
     private static final String DEFAULT_CURRENCY_KEY = "zł";
+    private static final String DOCUMENT_READY_STATE = "return document.readyState";
+    private static final String SCRIPT_COMPLETE = "complete";
     private static final String GOOGLE_FAVICON_URL_TEMPLATE = "https://www.google.com/s2/favicons?domain=%s&sz=64";
 
     private static final List<String> UNAVAILABILITY_PHRASES = List.of(
+            "niedostępny",
+            "unavailable",
             "obecnie niedostępny",
             "produkt niedostępny",
             "chwilowo niedostępny",
@@ -49,7 +52,12 @@ public abstract class ShopScraper {
             "currently unavailable",
             "out of stock",
             "no longer available",
-            "sold out"
+            "sold out",
+            "strona nie została znaleziona",
+            "nie możemy znaleźć tej strony",
+            "page not found",
+            "przepraszamy, szukana strona nie istnieje",
+            "podany adres url jest nieprawidłowy"
     );
 
     protected static final Map<String, String> CURRENCY_SYMBOLS = Map.of(
@@ -138,7 +146,8 @@ public abstract class ShopScraper {
             driver.get(url);
 
             final WebDriverWait wait = new WebDriverWait(driver, PAGE_LOAD_TIMEOUT);
-            wait.until(ExpectedConditions.presenceOfElementLocated(By.tagName("body")));
+            wait.until(webDriver -> Objects.equals(((JavascriptExecutor) webDriver)
+                    .executeScript(DOCUMENT_READY_STATE), SCRIPT_COMPLETE));
 
             final String pageSource = driver.getPageSource();
             return Jsoup.parse(Objects.requireNonNull(pageSource), url);
