@@ -1,6 +1,7 @@
 package com.github.pricemonitor.service.impl;
 
 import com.github.pricemonitor.model.dto.Notification;
+import com.github.pricemonitor.model.entity.NotificationEntity;
 import com.github.pricemonitor.model.entity.ProductEntity;
 import com.github.pricemonitor.model.entity.UserEntity;
 import com.github.pricemonitor.model.mapper.NotificationMapper;
@@ -11,6 +12,7 @@ import jakarta.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,19 +26,26 @@ import static com.github.pricemonitor.model.helper.NotificationType.PRODUCT_UNAV
 @RequiredArgsConstructor
 public class NotificationServiceImpl implements NotificationService {
 
+    private static final String NOTIFICATION_QUEUE = "/queue/notifications";
+
     private final NotificationRepository notificationRepository;
     private final NotificationMapper notificationMapper;
+    private final SimpMessagingTemplate messagingTemplate;
 
     @Override
     @Transactional
     public void notifyPriceDrop(final UserEntity user, final ProductEntity product, final BigDecimal triggerPrice) {
-        this.notificationRepository.save(this.notificationMapper.map(user, product, PRICE_DROP, triggerPrice));
+        final NotificationEntity saved = this.notificationRepository.save(
+                this.notificationMapper.map(user, product, PRICE_DROP, triggerPrice));
+        this.pushNotification(user, saved);
     }
 
     @Override
     @Transactional
     public void notifyProductUnavailable(final UserEntity user, final ProductEntity product) {
-        this.notificationRepository.save(this.notificationMapper.map(user, product, PRODUCT_UNAVAILABLE, null));
+        final NotificationEntity saved = this.notificationRepository.save(
+                this.notificationMapper.map(user, product, PRODUCT_UNAVAILABLE, null));
+        this.pushNotification(user, saved);
     }
 
     @Override
@@ -77,6 +86,14 @@ public class NotificationServiceImpl implements NotificationService {
         else {
             this.notificationRepository.deleteByUserPublicId(userPublicId);
         }
+    }
+
+    private void pushNotification(final UserEntity user, final NotificationEntity saved) {
+        this.messagingTemplate.convertAndSendToUser(
+                user.getPublicId().toString(),
+                NOTIFICATION_QUEUE,
+                this.notificationMapper.map(saved)
+        );
     }
 
 }

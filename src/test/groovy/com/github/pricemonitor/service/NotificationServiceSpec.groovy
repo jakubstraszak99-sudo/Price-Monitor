@@ -1,5 +1,6 @@
 package com.github.pricemonitor.service
 
+import com.github.pricemonitor.model.dto.Notification
 import com.github.pricemonitor.model.entity.NotificationEntity
 import com.github.pricemonitor.model.entity.ProductEntity
 import com.github.pricemonitor.model.entity.UserEntity
@@ -9,6 +10,7 @@ import com.github.pricemonitor.repository.NotificationRepository
 import com.github.pricemonitor.service.impl.NotificationServiceImpl
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.PageRequest
+import org.springframework.messaging.simp.SimpMessagingTemplate
 import spock.lang.Specification
 import spock.lang.Subject
 
@@ -18,15 +20,16 @@ class NotificationServiceSpec extends Specification {
 
     def notificationRepository = Mock(NotificationRepository)
     def notificationMapper = new NotificationMapperImpl(new ProductMapperImpl())
+    def messagingTemplate = Mock(SimpMessagingTemplate)
 
     @Subject
-    def service = new NotificationServiceImpl(this.notificationRepository, this.notificationMapper)
+    def service = new NotificationServiceImpl(this.notificationRepository, this.notificationMapper, this.messagingTemplate)
 
     def userPublicId = UUID.randomUUID()
 
-    def "Should save a PRICE_DROP notification"() {
+    def "Should save a PRICE_DROP notification and push it over the websocket"() {
         given:
-            def user = new UserEntity()
+            def user = new UserEntity(publicId: this.userPublicId)
             def product = new ProductEntity(productUrl: "https://example.com/product")
             def triggerPrice = new BigDecimal("199.99")
 
@@ -39,12 +42,16 @@ class NotificationServiceSpec extends Specification {
                         n.type == PRICE_DROP &&
                         n.triggerPrice == triggerPrice &&
                         !n.read
-        })
+            }) >> { NotificationEntity n -> n }
+            1 * this.messagingTemplate.convertAndSendToUser(this.userPublicId.toString(), "/queue/notifications", { Notification dto ->
+                dto.type() == PRICE_DROP && dto.triggerPrice() == triggerPrice
+            })
     }
 
-    def "Should save a PRODUCT_UNAVAILABLE notification"() {
+
+    def "Should save a PRODUCT_UNAVAILABLE notification and push it over the websocket"() {
         given:
-            def user = new UserEntity()
+            def user = new UserEntity(publicId: this.userPublicId)
             def product = new ProductEntity(productUrl: "https://example.com/product")
 
         when:
@@ -55,8 +62,12 @@ class NotificationServiceSpec extends Specification {
                 n.user == user && n.product == product &&
                         n.type == PRODUCT_UNAVAILABLE &&
                         n.triggerPrice == null
+            }) >> { NotificationEntity n -> n }
+            1 * this.messagingTemplate.convertAndSendToUser(this.userPublicId.toString(), "/queue/notifications", { Notification dto ->
+                dto.type() == PRODUCT_UNAVAILABLE
             })
     }
+
 
     def "Should return mapped notifications page for the given user"() {
         given:
