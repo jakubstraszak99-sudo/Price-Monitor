@@ -19,7 +19,7 @@ public class AmazonScraper extends ShopScraper {
 
     private static final String AMAZON_DOMAIN = "amazon.";
     private static final String TITLE_SELECTOR = "#productTitle";
-    private static final String BUY_BOX_CONTAINER_SELECTOR = "#corePriceDisplay_desktop_feature_div, #corePrice_feature_div, #apex_desktop, #unifiedPrice_feature_div";
+    private static final String BUY_BOX_CONTAINER_SELECTOR = "#corePriceDisplay_desktop_feature_div, #corePrice_feature_div, #corePrice_desktop, #tp_price_block_total_price_ww, #apex_desktop, #unifiedPrice_feature_div";
     private static final String OUT_OF_STOCK_SELECTOR = "#outOfStock";
     private static final String AVAILABILITY_SELECTOR = "#availability";
     private static final String OFFSCREEN_PRICE_SELECTOR = "span.a-price span.a-offscreen";

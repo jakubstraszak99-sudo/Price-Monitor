@@ -1,6 +1,8 @@
 package com.github.pricemonitor.exception;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -8,6 +10,15 @@ import java.time.LocalDateTime;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    @ExceptionHandler({MethodArgumentNotValidException.class, HttpMessageNotReadableException.class})
+    public ResponseEntity<ErrorResponse> handleInvalidRequest(final Exception exception) {
+        return ResponseEntity.badRequest().body(new ErrorResponse(
+                "INVALID_REQUEST",
+                "Invalid request body",
+                LocalDateTime.now()
+        ));
+    }
 
     @ExceptionHandler(PmRuntimeException.class)
     public ResponseEntity<ErrorResponse> handlePmRuntimeException(final PmRuntimeException exception) {

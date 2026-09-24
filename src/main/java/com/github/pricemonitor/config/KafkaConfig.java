@@ -32,6 +32,9 @@ public class KafkaConfig {
     @Value("${spring.kafka.bootstrap-servers}")
     private String bootstrapServers;
 
+    @Value("${spring.kafka.listener.concurrency}")
+    private Integer concurrency;
+
     @Bean
     @Primary
     public KafkaTemplate<String, KafkaMessage> kafkaTemplate(final ProducerFactory<String, KafkaMessage> producerFactory) {
@@ -106,6 +109,7 @@ public class KafkaConfig {
     private ConcurrentKafkaListenerContainerFactory<String, KafkaMessage> containerFactory(final ConsumerFactory<String, KafkaMessage> consumerFactory) {
         final ConcurrentKafkaListenerContainerFactory<String, KafkaMessage> factory = new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(consumerFactory);
+        factory.setConcurrency(this.concurrency);
         return factory;
     }
 

@@ -3,6 +3,7 @@ package com.github.pricemonitor.model.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
+import org.hibernate.annotations.ColumnDefault;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -36,6 +37,11 @@ public class UserEntity extends BaseEntity {
     @Column(nullable = false)
     @Builder.Default
     private Boolean verified = false;
+
+    @Column(nullable = false)
+    @ColumnDefault("true")
+    @Builder.Default
+    private Boolean emailAlertsEnabled = true;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     @ToString.Exclude

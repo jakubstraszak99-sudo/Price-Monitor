@@ -26,9 +26,11 @@ public class PriceAlertNotificationServiceImpl implements PriceAlertNotification
     @Transactional
     public void notifyAboutPriceChange(final ProductEntity product, final BigDecimal newPrice) {
         this.priceAlertRepository.findActiveAlertsForProduct(product.getId(), newPrice).forEach(alert -> {
-            final String email = alert.getUser().getEmail();
-            final EmailNotificationMessage event = new EmailNotificationMessage(email, product.getProductUrl());
-            this.eventPublisher.publish(ALERT_NOTIFICATION_TOPIC, email, event);
+            if (Boolean.TRUE.equals(alert.getUser().getEmailAlertsEnabled())) {
+                final String email = alert.getUser().getEmail();
+                final EmailNotificationMessage event = new EmailNotificationMessage(email, product.getProductUrl());
+                this.eventPublisher.publish(ALERT_NOTIFICATION_TOPIC, email, event);
+            }
             this.notificationService.notifyPriceDrop(alert.getUser(), product, newPrice);
             alert.setActive(false);
         });

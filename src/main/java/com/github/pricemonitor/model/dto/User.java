@@ -5,5 +5,6 @@ import java.util.UUID;
 public record User(
         UUID publicId,
         String username,
-        String email
+        String email,
+        Boolean emailAlertsEnabled
 ) {}

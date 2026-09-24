@@ -62,4 +62,22 @@ class PriceAlertNotificationServiceSpec extends Specification {
             0 * this.notificationService.notifyPriceDrop(*_)
     }
 
+    def "Should preserve in-app notifications and deactivate alerts when emails are disabled"() {
+        given:
+            def product = new ProductEntity(productUrl: "https://example.com/product")
+            ReflectionTestUtils.setField(product, "id", 1L)
+            def user = new UserEntity(email: "user@example.com", emailAlertsEnabled: false)
+            def alert = new PriceAlertEntity(user: user, active: true)
+            def newPrice = new BigDecimal("199.99")
+            this.priceAlertRepository.findActiveAlertsForProduct(product.getId(), newPrice) >> [alert]
+
+        when:
+            this.service.notifyAboutPriceChange(product, newPrice)
+
+        then:
+            !alert.active
+            0 * this.eventPublisher.publish(*_)
+            1 * this.notificationService.notifyPriceDrop(user, product, newPrice)
+    }
+
 }

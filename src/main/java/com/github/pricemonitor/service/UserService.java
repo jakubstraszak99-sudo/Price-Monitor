@@ -11,6 +11,8 @@ public interface UserService {
 
     User getUser(final UUID publicId);
 
+    User updateSettings(final UUID userPublicId, final boolean emailAlertsEnabled);
+
     void updatePassword(final UUID userPublicId, final String oldPassword, final String newPassword);
 
     void forgotPassword(final String email);

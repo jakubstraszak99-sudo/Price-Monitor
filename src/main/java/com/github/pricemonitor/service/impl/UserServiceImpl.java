@@ -46,6 +46,14 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
+    public User updateSettings(final UUID userPublicId, final boolean emailAlertsEnabled) {
+        final UserEntity user = this.fetchUser(userPublicId);
+        user.setEmailAlertsEnabled(emailAlertsEnabled);
+        return this.userMapper.map(user);
+    }
+
+    @Override
+    @Transactional
     public void updatePassword(final UUID userPublicId, final String oldPassword, final String newPassword) {
         final UserEntity user = this.fetchUser(userPublicId);
 

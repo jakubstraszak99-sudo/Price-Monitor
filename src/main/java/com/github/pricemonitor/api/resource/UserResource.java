@@ -5,6 +5,7 @@ import com.github.pricemonitor.model.dto.User;
 import com.github.pricemonitor.model.request.password.ResetPasswordRequest;
 import com.github.pricemonitor.model.request.password.UpdatePasswordRequest;
 import com.github.pricemonitor.model.request.password.ForgotPasswordRequest;
+import com.github.pricemonitor.model.request.user.UpdateUserSettingsRequest;
 import com.github.pricemonitor.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -22,6 +23,12 @@ public class UserResource implements UserApi {
     @Override
     public ResponseEntity<User> getUser(final UUID userPublicId) {
         final User user = this.userService.getUser(userPublicId);
+        return ResponseEntity.status(HttpStatus.OK).body(user);
+    }
+
+    @Override
+    public ResponseEntity<User> updateSettings(final UpdateUserSettingsRequest request, final UUID userPublicId) {
+        final User user = this.userService.updateSettings(userPublicId, request.emailAlertsEnabled());
         return ResponseEntity.status(HttpStatus.OK).body(user);
     }
 

@@ -4,6 +4,7 @@ import com.github.pricemonitor.model.dto.User;
 import com.github.pricemonitor.model.request.password.ForgotPasswordRequest;
 import com.github.pricemonitor.model.request.password.ResetPasswordRequest;
 import com.github.pricemonitor.model.request.password.UpdatePasswordRequest;
+import com.github.pricemonitor.model.request.user.UpdateUserSettingsRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -40,6 +41,28 @@ public interface UserApi {
     })
     @GetMapping
     ResponseEntity<User> getUser(@AuthenticationPrincipal final UUID userPublicId);
+
+    @Operation(summary = "Update user settings", description = "Enables or disables price alert emails for the authenticated user")
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Settings updated successfully",
+                    content = @Content(
+                            mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = User.class))),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Invalid settings",
+                    content = @Content(schema = @Schema())),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "Unauthorized",
+                    content = @Content(schema = @Schema()))
+    })
+    @PatchMapping("/settings")
+    ResponseEntity<User> updateSettings(
+            @RequestBody @Valid final UpdateUserSettingsRequest request,
+            @AuthenticationPrincipal final UUID userPublicId);
 
     @Operation(summary = "Password change", description = "Changes user password")
     @ApiResponses(value = {

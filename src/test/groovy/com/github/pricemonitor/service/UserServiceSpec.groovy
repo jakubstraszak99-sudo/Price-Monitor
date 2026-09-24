@@ -36,6 +36,53 @@ class UserServiceSpec extends Specification {
     def userEmail = "test@example.com"
     def oldHash = "old_encoded_password"
 
+    def "Should enable email alerts by default"() {
+        expect:
+            new UserEntity().getEmailAlertsEnabled()
+            UserEntity.builder().build().getEmailAlertsEnabled()
+    }
+
+    def "Should return saved email preference in user data"() {
+        given:
+            def user = new UserEntity(publicId: this.userId, emailAlertsEnabled: enabled)
+            this.userRepository.findByPublicId(this.userId) >> Optional.of(user)
+
+        expect:
+            this.service.getUser(this.userId).emailAlertsEnabled() == enabled
+
+        where:
+            enabled << [true, false]
+    }
+
+    def "Should update email preference for the current user"() {
+        given:
+            def user = new UserEntity(publicId: this.userId, emailAlertsEnabled: !enabled)
+            this.userRepository.findByPublicId(this.userId) >> Optional.of(user)
+
+        when:
+            def result = this.service.updateSettings(this.userId, enabled)
+
+        then:
+            user.getEmailAlertsEnabled() == enabled
+            result.emailAlertsEnabled() == enabled
+            result.publicId() == this.userId
+
+        where:
+            enabled << [false, true]
+    }
+
+    def "Should reject settings update for a missing user"() {
+        given:
+            this.userRepository.findByPublicId(this.userId) >> Optional.empty()
+
+        when:
+            this.service.updateSettings(this.userId, false)
+
+        then:
+            def exception = thrown(PmRuntimeException)
+            exception.code == ExceptionCode.E001
+    }
+
     def "Should return user when valid publicId is provided"() {
         given:
             def user = new UserEntity(publicId: this.userId, email: this.userEmail)

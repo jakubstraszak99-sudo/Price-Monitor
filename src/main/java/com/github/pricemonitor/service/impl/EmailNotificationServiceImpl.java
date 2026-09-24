@@ -1,6 +1,7 @@
 package com.github.pricemonitor.service.impl;
 
 import com.github.pricemonitor.properties.AppProperties;
+import com.github.pricemonitor.repository.UserRepository;
 import com.github.pricemonitor.service.EmailNotificationService;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
@@ -70,6 +71,7 @@ public class EmailNotificationServiceImpl implements EmailNotificationService {
 
     private final JavaMailSender mailSender;
     private final AppProperties appProperties;
+    private final UserRepository userRepository;
 
     @Override
     public void sendVerificationEmail(final String to, final String token) {
@@ -89,6 +91,11 @@ public class EmailNotificationServiceImpl implements EmailNotificationService {
 
     @Override
     public void sendAlertNotificationEmail(final String to, final String url) {
+        // Recheck the preference in case it changed while the event was queued.
+        if (!this.userRepository.existsByEmailAndEmailAlertsEnabledTrue(to)) {
+            return;
+        }
+
         final String htmlContent = ALERT_TEMPLATE.formatted(url);
         this.sendEmail(to, ALERT_SUBJECT, htmlContent);
         log.debug("Alert notification email sent to: {}", to);
