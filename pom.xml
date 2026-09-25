@@ -10,7 +10,7 @@
     </parent>
     <groupId>com.github</groupId>
     <artifactId>price-monitor</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>1.0</version>
     <name>Price Monitor</name>
 
     <properties>
@@ -20,6 +20,7 @@
         <openapi.version>3.1.0</openapi.version>
         <jjwt.version>0.13.0</jjwt.version>
         <mapstruct.version>1.6.3</mapstruct.version>
+        <guava.version>33.7.1-jre</guava.version>
         <jsoup.version>1.23.1</jsoup.version>
         <selenium.version>4.47.0</selenium.version>
         <webdrivermanager.version>6.3.4</webdrivermanager.version>
@@ -141,6 +142,11 @@
             <artifactId>mapstruct</artifactId>
             <version>${mapstruct.version}</version>
             <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>${guava.version}</version>
         </dependency>
         <dependency>
             <groupId>org.jsoup</groupId>

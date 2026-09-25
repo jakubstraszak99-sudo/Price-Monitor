@@ -28,7 +28,6 @@ public class ProductUpdateScheduler {
         List<ProductEntity> batch;
 
         do {
-            // A removed product must not shift the offset and skip another product.
             batch = this.productRepository.findByIdGreaterThanOrderByIdAsc(lastId, PageRequest.of(0, BATCH_SIZE));
             for (final ProductEntity product : batch) {
                 this.productService.requestProductCheck(product.getProductUrl());

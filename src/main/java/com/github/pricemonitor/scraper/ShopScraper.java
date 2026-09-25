@@ -1,6 +1,8 @@
 package com.github.pricemonitor.scraper;
 
 import com.github.pricemonitor.config.WebDriverConfig;
+import com.google.common.net.InetAddresses;
+import com.google.common.net.InternetDomainName;
 import com.github.pricemonitor.exception.PmRuntimeException;
 import com.github.pricemonitor.model.dto.ScrapedProduct;
 import jakarta.annotation.Nullable;
@@ -201,7 +203,7 @@ public abstract class ShopScraper {
             return input;
         }
 
-        return Character.toUpperCase(input.charAt(0)) + input.substring(1).toLowerCase();
+        return Character.toUpperCase(input.charAt(0)) + input.substring(1).toLowerCase(Locale.ROOT);
     }
 
     @Nullable
@@ -213,9 +215,18 @@ public abstract class ShopScraper {
                 return null;
             }
             
-            final String cleanHost = host.startsWith("www.") ? host.substring(4) : host;
-            final String[] parts = cleanHost.split("\\.");
-            return parts.length >= 2 ? parts[parts.length - 2] : cleanHost;
+            final String normalizedHost = host.toLowerCase(Locale.ROOT);
+            final String cleanHost = normalizedHost.startsWith("www.") ? normalizedHost.substring(4) : normalizedHost;
+            if (InetAddresses.isInetAddress(cleanHost) || cleanHost.startsWith("[")) {
+                return cleanHost;
+            }
+
+            final InternetDomainName domain = InternetDomainName.from(cleanHost);
+            if (domain.isUnderPublicSuffix()) {
+                return domain.topPrivateDomain().parts().getFirst();
+            }
+
+            return cleanHost;
         } catch (final Exception _) {
             return null;
         }

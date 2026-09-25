@@ -15,7 +15,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-@Order(7)
+@Order(9)
 @Component
 public class SteamScraper extends ShopScraper {
 

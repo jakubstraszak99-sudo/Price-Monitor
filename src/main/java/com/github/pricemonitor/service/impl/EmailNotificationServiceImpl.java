@@ -91,7 +91,6 @@ public class EmailNotificationServiceImpl implements EmailNotificationService {
 
     @Override
     public void sendAlertNotificationEmail(final String to, final String url) {
-        // Recheck the preference in case it changed while the event was queued.
         if (!this.userRepository.existsByEmailAndEmailAlertsEnabledTrue(to)) {
             return;
         }

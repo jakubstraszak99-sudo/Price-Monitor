@@ -30,4 +30,26 @@ class GenericScraperSpec extends Specification {
             "<html><body>Text</body></html>"                                                    || "PLN"
     }
 
+    def "Should derive shop name from domain rather than public suffix"() {
+        expect:
+            this.scraper.extractShop(url) == expected
+
+        where:
+            url                                   || expected
+            "https://www.example.co.uk/produkt"   || "Example"
+            "https://shop.example.com.au/produkt" || "Example"
+            "https://www.EXAMPLE.pl/produkt"      || "Example"
+            "https://example.com/produkt"         || "Example"
+            "https://example.com./produkt"        || "Example"
+            "https://myshop.blogspot.com/produkt" || "Myshop"
+            "http://localhost:9090/produkt.html"  || "Localhost"
+            "http://127.0.0.1:9090/produkt.html"  || "127.0.0.1"
+            "http://[::1]:9090/produkt.html"      || "[::1]"
+            "http://shop.internal/produkt.html"   || "Shop.internal"
+            "https://com.pl/"                     || "Com.pl"
+            "/produkt.html"                       || null
+            "invalid url"                         || null
+            null                                  || null
+    }
+
 }

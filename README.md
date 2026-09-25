@@ -105,21 +105,6 @@ Timeouty, błędy połączenia i odpowiedzi takie jak 403, 429 czy 5xx nie usuwa
 
 Dedykowane scrapery obsługują Amazon, Gunfire, Komputronik, Media Expert, Morele, RTV Euro AGD, Steam i x-kom. Dla pozostałych stron działa scraper ogólny oparty na metadanych. Wynik zależy od struktury strony i ograniczeń sklepu; obsługa domeny nie gwarantuje odczytu każdego produktu.
 
-## Baza danych po aktualizacji starszej wersji
-
-Nowa baza utworzona z aktualnych encji ma już schemat wymagany do zachowywania powiadomień po usunięciu produktu.
-
-W istniejącej bazie wykonaj jednorazowo poniższą migrację, jeśli nie była wcześniej zastosowana:
-
-```sql
-BEGIN;
-ALTER TABLE notifications ADD COLUMN IF NOT EXISTS product_name varchar(255);
-ALTER TABLE notifications ALTER COLUMN product_id DROP NOT NULL;
-COMMIT;
-```
-
-`ddl-auto: update` dodaje kolumnę, ale używana wersja Hibernate nie zdejmuje istniejącego ograniczenia `NOT NULL`. Bez tej zmiany zapis powiadomienia bez produktu zakończy się błędem. SQL uruchom w kliencie PostgreSQL połączonym z właściwą bazą, np. w konsoli bazy w IDE. Repozytorium nie ma skonfigurowanego automatycznego narzędzia migracji.
-
 ## REST API i WebSocket
 
 Swagger i OpenAPI są dostępne w `dev`; profil `prod` je wyłącza.

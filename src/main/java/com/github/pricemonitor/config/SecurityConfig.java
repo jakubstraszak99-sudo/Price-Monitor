@@ -40,10 +40,9 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(final HttpSecurity http, final Environment environment,
+    public SecurityFilterChain securityFilterChain(final HttpSecurity http,
+                                                   final Environment environment,
                                                    final CookieCsrfTokenRepository csrfTokenRepository) {
-        final boolean documentationEnabled = environment.matchesProfiles("dev") && !environment.matchesProfiles("prod");
-
         return http
                 .csrf(csrf -> csrf.spa().csrfTokenRepository(csrfTokenRepository))
                 .cors(Customizer.withDefaults())
@@ -52,7 +51,7 @@ public class SecurityConfig {
                 .exceptionHandling(exceptions -> exceptions.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
                 .authorizeHttpRequests(auth -> {
                     auth.dispatcherTypeMatchers(DispatcherType.ERROR).permitAll();
-                    if (documentationEnabled) {
+                    if (environment.matchesProfiles("dev") && !environment.matchesProfiles("prod")) {
                         auth.requestMatchers(
                                     "/v3/api-docs",
                                     "/v3/api-docs/**",
