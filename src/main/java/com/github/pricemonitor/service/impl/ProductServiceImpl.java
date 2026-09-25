@@ -17,6 +17,7 @@ import com.github.pricemonitor.service.PriceHistoryService;
 import com.github.pricemonitor.service.ProductService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -29,6 +30,7 @@ import java.net.URI;
 import java.util.Objects;
 import java.util.Optional;
 
+import static com.github.pricemonitor.config.CacheConfig.PRICE_HISTORY;
 import static com.github.pricemonitor.exception.ExceptionCode.E011;
 import static com.github.pricemonitor.kafka.KafkaConstants.SCRAPER_REPLY_TOPIC;
 import static com.github.pricemonitor.kafka.KafkaConstants.SCRAPER_REQUEST_TOPIC;
@@ -91,6 +93,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional
+    @CacheEvict(cacheNames = PRICE_HISTORY, key = "#productUrl")
     public void removeProduct(final String productUrl) {
         this.findProduct(productUrl).ifPresent(product -> {
             product.getPriceAlerts().stream()

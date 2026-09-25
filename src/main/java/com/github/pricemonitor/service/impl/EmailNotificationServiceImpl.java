@@ -62,7 +62,7 @@ public class EmailNotificationServiceImpl implements EmailNotificationService {
                     <p>Cena przedmiotu, który monitorujesz, spadła poniżej ustalonej przez Ciebie kwoty!</p>
                     <p style="margin: 20px 0;">
                         <a href="%s" style="display: inline-block; padding: 10px 20px; color: #ffffff; background-color: #4f46e5; text-decoration: none; border-radius: 5px; font-weight: bold;">
-                            CSprawdź swój przedmiot
+                            Sprawdź swój przedmiot
                         </a>
                     </p>
                 </body>
