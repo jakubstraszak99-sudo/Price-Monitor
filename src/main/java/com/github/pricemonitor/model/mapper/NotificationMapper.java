@@ -22,6 +22,7 @@ public interface NotificationMapper {
 
     @Mapping(target = "user", source = "user")
     @Mapping(target = "product", source = "product")
+    @Mapping(target = "productName", source = "product.name")
     @Mapping(target = "type", source = "type")
     @Mapping(target = "triggerPrice", source = "triggerPrice")
     @Mapping(target = "read", constant = "false")

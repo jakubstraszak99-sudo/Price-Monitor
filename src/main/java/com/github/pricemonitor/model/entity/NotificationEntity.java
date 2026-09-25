@@ -30,9 +30,12 @@ public class NotificationEntity extends BaseEntity {
     @JoinColumn(name = "user_id", nullable = false)
     private UserEntity user;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "product_id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "product_id")
     private ProductEntity product;
+
+    @Column
+    private String productName;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

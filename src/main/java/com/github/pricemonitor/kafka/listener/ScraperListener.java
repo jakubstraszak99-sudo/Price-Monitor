@@ -13,6 +13,7 @@ import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.stereotype.Component;
 
 import static com.github.pricemonitor.exception.ExceptionCode.E016;
+import static com.github.pricemonitor.exception.ExceptionCode.E017;
 import static com.github.pricemonitor.kafka.KafkaConstants.SCRAPER_REPLY_TOPIC;
 import static com.github.pricemonitor.kafka.KafkaConstants.SCRAPER_REQUEST_TOPIC;
 
@@ -33,7 +34,7 @@ public class ScraperListener {
             final ScrapedProduct product = this.scraperService.scrapeProduct(message.url());
             return ScraperReplyMessage.success(message.url(), product);
         } catch (final Exception e) {
-            log.error("An error occurred during scraping process: {}", e.getMessage());
+            log.warn("An error occurred during scraping process: {}", e.getMessage());
             return this.handleScrapingException(message.url(), e);
         }
 
@@ -44,10 +45,12 @@ public class ScraperListener {
         log.debug("Received scraping reply event for url: {}", message.url());
 
         if (!message.success() || message.scrapedProduct() == null) {
-            log.error("Scraping failed: {}", message.error());
+            log.warn("Scraping failed: {}", message.error());
 
             if (message.errorCode() == E016) {
                 this.productService.markUnavailable(message.url());
+            } else if (message.errorCode() == E017) {
+                this.productService.removeProduct(message.url());
             }
 
             return;
@@ -57,7 +60,7 @@ public class ScraperListener {
     }
 
     private ScraperReplyMessage handleScrapingException(final String url, final Exception exception) {
-        log.error("An error occurred during scraping process for url: {}", url, exception);
+        log.warn("An error occurred during scraping process for url: {}", url, exception);
 
         if (exception instanceof PmRuntimeException e) {
             return ScraperReplyMessage.failure(url, e.getMessage(), e.getCode());

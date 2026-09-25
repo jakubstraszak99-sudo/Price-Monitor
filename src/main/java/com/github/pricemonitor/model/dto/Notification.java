@@ -10,6 +10,7 @@ public record Notification(
         UUID publicId,
         NotificationType type,
         Product product,
+        String productName,
         boolean read,
         BigDecimal triggerPrice,
         LocalDateTime createdAt

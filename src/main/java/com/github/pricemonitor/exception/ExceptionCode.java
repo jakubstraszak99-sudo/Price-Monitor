@@ -23,7 +23,8 @@ public enum ExceptionCode {
     E013("Failed to receive data", HttpStatus.GATEWAY_TIMEOUT),
     E014("Price alert already exists", HttpStatus.CONFLICT),
     E015("Price alert not found", HttpStatus.NOT_FOUND),
-    E016("Product appears to be unavailable", HttpStatus.UNPROCESSABLE_CONTENT);
+    E016("Product appears to be unavailable", HttpStatus.UNPROCESSABLE_CONTENT),
+    E017("Product page no longer exists", HttpStatus.NOT_FOUND);
 
     private final String message;
     private final HttpStatus status;

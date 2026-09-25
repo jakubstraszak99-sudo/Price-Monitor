@@ -15,6 +15,8 @@ public interface NotificationService {
 
     void notifyProductUnavailable(final UserEntity user, final ProductEntity product);
 
+    void notifyProductRemoved(final UserEntity user, final ProductEntity product);
+
     NotificationPage getNotifications(final Pageable pageable, final UUID userPublicId);
 
     long getUnreadCount(final UUID userPublicId);

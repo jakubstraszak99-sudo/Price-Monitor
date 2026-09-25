@@ -38,6 +38,18 @@ public abstract class ShopScraper {
     private static final String DOCUMENT_READY_STATE = "return document.readyState";
     private static final String SCRIPT_COMPLETE = "complete";
     private static final String GOOGLE_FAVICON_URL_TEMPLATE = "https://www.google.com/s2/favicons?domain=%s&sz=64";
+    private static final String RESPONSE_STATUS = "return window.performance.getEntriesByType('navigation')[0]?.responseStatus || 0";
+
+    private static final List<String> MISSING_PAGE_PHRASES = List.of(
+            "strona nie została znaleziona",
+            "nie możemy znaleźć tej strony",
+            "page not found",
+            "szukana strona nie istnieje",
+            "podany adres url jest nieprawidłowy",
+            "produkt nie istnieje",
+            "nie znaleziono produktu",
+            "product not found"
+    );
 
     private static final List<String> UNAVAILABILITY_PHRASES = List.of(
             "niedostępny",
@@ -52,12 +64,7 @@ public abstract class ShopScraper {
             "currently unavailable",
             "out of stock",
             "no longer available",
-            "sold out",
-            "strona nie została znaleziona",
-            "nie możemy znaleźć tej strony",
-            "page not found",
-            "przepraszamy, szukana strona nie istnieje",
-            "podany adres url jest nieprawidłowy"
+            "sold out"
     );
 
     protected static final Map<String, String> CURRENCY_SYMBOLS = Map.of(
@@ -72,6 +79,10 @@ public abstract class ShopScraper {
 
     public ScrapedProduct scrape(final String url) {
         final Document doc = this.getDocument(url);
+
+        if (this.isMissingPage(doc)) {
+            throw new PmRuntimeException(E017, url);
+        }
 
         if (!this.isAvailable(doc)) {
             throw new PmRuntimeException(E016, url);
@@ -92,6 +103,11 @@ public abstract class ShopScraper {
     }
 
     public abstract boolean supports(final String url);
+
+    protected boolean isMissingPage(final Document doc) {
+        final String heading = doc.select("title, h1").text().toLowerCase(Locale.ROOT);
+        return MISSING_PAGE_PHRASES.stream().anyMatch(heading::contains);
+    }
 
     protected boolean isAvailable(final Document doc) {
         final String pageText = doc.text().toLowerCase();
@@ -149,8 +165,19 @@ public abstract class ShopScraper {
             wait.until(webDriver -> Objects.equals(((JavascriptExecutor) webDriver)
                     .executeScript(DOCUMENT_READY_STATE), SCRIPT_COMPLETE));
 
+            final Object status = ((JavascriptExecutor) driver).executeScript(RESPONSE_STATUS);
+            if (status instanceof Number code && (code.intValue() == 404 || code.intValue() == 410)) {
+                throw new PmRuntimeException(E017, url);
+            }
+
+            if (status instanceof Number code && code.intValue() >= 400) {
+                throw new PmRuntimeException(E012, url);
+            }
+
             final String pageSource = driver.getPageSource();
             return Jsoup.parse(Objects.requireNonNull(pageSource), url);
+        } catch (final PmRuntimeException e) {
+            throw e;
         } catch (final Exception e) {
             throw new PmRuntimeException(E012, e);
         } finally {

@@ -17,6 +17,8 @@ public interface ProductService {
 
     void markUnavailable(final String productUrl);
 
+    void removeProduct(final String productUrl);
+
     void requestProductCheck(final String url);
 
 }

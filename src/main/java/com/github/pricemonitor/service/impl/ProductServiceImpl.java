@@ -6,6 +6,7 @@ import com.github.pricemonitor.kafka.message.ScraperReplyMessage;
 import com.github.pricemonitor.kafka.message.ScraperRequestMessage;
 import com.github.pricemonitor.model.dto.Product;
 import com.github.pricemonitor.model.dto.ScrapedProduct;
+import com.github.pricemonitor.model.entity.PriceAlertEntity;
 import com.github.pricemonitor.model.entity.ProductEntity;
 import com.github.pricemonitor.model.mapper.ProductMapper;
 import com.github.pricemonitor.model.page.ProductPage;
@@ -85,6 +86,18 @@ public class ProductServiceImpl implements ProductService {
             product.getPriceAlerts().forEach(alert ->
                     this.notificationService.notifyProductUnavailable(alert.getUser(), product));
             product.getPriceAlerts().clear();
+        });
+    }
+
+    @Override
+    @Transactional
+    public void removeProduct(final String productUrl) {
+        this.findProduct(productUrl).ifPresent(product -> {
+            product.getPriceAlerts().stream()
+                    .map(PriceAlertEntity::getUser)
+                    .distinct()
+                    .forEach(user -> this.notificationService.notifyProductRemoved(user, product));
+            this.productRepository.delete(product);
         });
     }
 

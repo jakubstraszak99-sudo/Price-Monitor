@@ -1,37 +1,40 @@
 package com.github.pricemonitor.scheduler
 
-import com.github.pricemonitor.model.dto.Product
-import com.github.pricemonitor.model.page.ProductPage
+import com.github.pricemonitor.model.entity.ProductEntity
+import com.github.pricemonitor.repository.ProductRepository
 import com.github.pricemonitor.service.ProductService
 import org.springframework.data.domain.PageRequest
 import spock.lang.Specification
-import spock.lang.Subject
 
 class ProductUpdateSchedulerSpec extends Specification {
-
     def productService = Mock(ProductService)
+    def productRepository = Mock(ProductRepository)
+    def scheduler = new ProductUpdateScheduler(productService, productRepository)
 
-    @Subject
-    def scheduler = new ProductUpdateScheduler(this.productService)
-
-    def "Should fetch products in batches and trigger price checks"() {
+    def "Should use the last ID instead of offsets so concurrent deletions do not skip products"() {
         given:
-            def url1 = "https://example.com/product-1"
-            def url2 = "https://example.com/product-2"
-
-            def product1 = Mock(Product) { productUrl() >> URI.create(url1) }
-            def product2 = Mock(Product) { productUrl() >> URI.create(url2) }
-
-            def pageable = PageRequest.of(0, 100)
-            def firstPage = new ProductPage([product1, product2], pageable, 2)
+            def firstBatch = (1L..100L).collect {
+                ProductEntity.builder().id(it).productUrl("https://example.com/product-$it").build()
+            }
+            def lastProduct = ProductEntity.builder().id(105L).productUrl("https://example.com/product-105").build()
 
         when:
-            this.scheduler.scheduleProductUpdates()
+            scheduler.scheduleProductUpdates()
 
         then:
-            1 * this.productService.getProducts(pageable, null) >> firstPage
-            1 * this.productService.requestProductCheck(url1)
-            1 * this.productService.requestProductCheck(url2)
+            1 * productRepository.findByIdGreaterThanOrderByIdAsc(0L, PageRequest.of(0, 100)) >> firstBatch
+            1 * productRepository.findByIdGreaterThanOrderByIdAsc(100L, PageRequest.of(0, 100)) >> [lastProduct]
+            100 * productService.requestProductCheck({ it != lastProduct.productUrl })
+            1 * productService.requestProductCheck(lastProduct.productUrl)
+            0 * productRepository._
     }
 
+    def "Should handle an empty database"() {
+        when:
+            scheduler.scheduleProductUpdates()
+
+        then:
+            1 * productRepository.findByIdGreaterThanOrderByIdAsc(0L, _) >> []
+            0 * productService._
+    }
 }

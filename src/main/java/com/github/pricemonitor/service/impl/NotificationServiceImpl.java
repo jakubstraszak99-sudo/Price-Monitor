@@ -15,6 +15,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.math.BigDecimal;
 import java.util.UUID;
@@ -45,6 +47,15 @@ public class NotificationServiceImpl implements NotificationService {
     public void notifyProductUnavailable(final UserEntity user, final ProductEntity product) {
         final NotificationEntity saved = this.notificationRepository.save(
                 this.notificationMapper.map(user, product, PRODUCT_UNAVAILABLE, null));
+        this.pushNotification(user, saved);
+    }
+
+    @Override
+    @Transactional
+    public void notifyProductRemoved(final UserEntity user, final ProductEntity product) {
+        final NotificationEntity notification = this.notificationMapper.map(user, product, PRODUCT_UNAVAILABLE, null);
+        notification.setProduct(null);
+        final NotificationEntity saved = this.notificationRepository.save(notification);
         this.pushNotification(user, saved);
     }
 
@@ -89,11 +100,19 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     private void pushNotification(final UserEntity user, final NotificationEntity saved) {
-        this.messagingTemplate.convertAndSendToUser(
-                user.getPublicId().toString(),
-                NOTIFICATION_QUEUE,
-                this.notificationMapper.map(saved)
-        );
+        final Notification notification = this.notificationMapper.map(saved);
+        final Runnable push = () -> this.messagingTemplate.convertAndSendToUser(
+                user.getPublicId().toString(), NOTIFICATION_QUEUE, notification);
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    push.run();
+                }
+            });
+        } else {
+            push.run();
+        }
     }
 
 }

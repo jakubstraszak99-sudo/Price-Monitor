@@ -151,5 +151,26 @@ class NotificationServiceSpec extends Specification {
             1 * this.notificationRepository.deleteByUserPublicId(this.userPublicId)
     }
 
+    def "Should save a PRODUCT_UNAVAILABLE notification with a null product reference and push it over the websocket when product is removed"() {
+        given:
+            def user = new UserEntity(publicId: this.userPublicId)
+            def product = new ProductEntity(productUrl: "https://example.com/product")
+
+        when:
+            this.service.notifyProductRemoved(user, product)
+
+        then:
+            1 * this.notificationRepository.save({ NotificationEntity n ->
+                n.user == user &&
+                        n.product == null &&
+                        n.type == PRODUCT_UNAVAILABLE &&
+                        n.triggerPrice == null
+            }) >> { NotificationEntity n -> n }
+
+            1 * this.messagingTemplate.convertAndSendToUser(this.userPublicId.toString(), "/queue/notifications", { Notification dto ->
+                dto.type() == PRODUCT_UNAVAILABLE
+            })
+    }
+
 }
 

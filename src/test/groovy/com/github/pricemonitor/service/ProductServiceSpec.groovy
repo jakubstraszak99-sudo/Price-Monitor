@@ -356,8 +356,6 @@ class ProductServiceSpec extends Specification {
             1 * this.notificationService.notifyProductUnavailable(user, existingProduct)
     }
 
-
-
     def "Should do nothing when marking an unknown product unavailable"() {
         given:
             this.productRepository.findByProductUrl(this.url) >> Optional.empty()
@@ -394,6 +392,58 @@ class ProductServiceSpec extends Specification {
 
         then:
             1 * this.eventPublisher.publish(KafkaConstants.SCRAPER_REQUEST_TOPIC, this.url, { request -> request.url() == this.url }, SCRAPER_REPLY_TOPIC)
+    }
+
+    def "Should remove product and notify distinct users from price alerts"() {
+        given:
+            def user1 = new UserEntity(email: "user1@example.com")
+            def user2 = new UserEntity(email: "user2@example.com")
+            def alert1 = new PriceAlertEntity(user: user1)
+            def alert2 = new PriceAlertEntity(user: user2)
+            def alert3 = new PriceAlertEntity(user: user1)
+            def existingProduct = new ProductEntity(
+                    productUrl: this.url,
+                    priceAlerts: [alert1, alert2, alert3]
+            )
+            this.productRepository.findByProductUrl(this.url) >> Optional.of(existingProduct)
+
+        when:
+            this.service.removeProduct(this.url)
+
+        then:
+            1 * this.notificationService.notifyProductRemoved(user1, existingProduct)
+            1 * this.notificationService.notifyProductRemoved(user2, existingProduct)
+            0 * this.notificationService.notifyProductRemoved(_, _)
+            1 * this.productRepository.delete(existingProduct)
+    }
+
+    def "Should remove product without sending notifications when no price alerts exist"() {
+        given:
+            def existingProduct = new ProductEntity(
+                    productUrl: this.url,
+                    priceAlerts: []
+            )
+            this.productRepository.findByProductUrl(this.url) >> Optional.of(existingProduct)
+
+        when:
+            this.service.removeProduct(this.url)
+
+        then:
+            0 * this.notificationService.notifyProductRemoved(_, _)
+            1 * this.productRepository.delete(existingProduct)
+    }
+
+    def "Should do nothing when attempting to remove an unknown product"() {
+        given:
+            this.productRepository.findByProductUrl(this.url) >> Optional.empty()
+
+        when:
+            this.service.removeProduct(this.url)
+
+        then:
+            0 * this.notificationService.notifyProductRemoved(_, _)
+            0 * this.productRepository.delete(_)
+            noExceptionThrown()
     }
 
 }
