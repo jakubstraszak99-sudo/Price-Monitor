@@ -27,9 +27,9 @@ public interface PriceAlertRepository extends JpaRepository<PriceAlertEntity, Lo
             "OR LOWER(a.product.shop) LIKE LOWER(CONCAT('%', :search, '%')))")
     Page<PriceAlertEntity> searchAlertsByUserAndProductOrShop(final UUID userPublicId, final String search, final Pageable pageable);
 
-    Optional<PriceAlertEntity> findByPublicId(final UUID publicId);
+    Optional<PriceAlertEntity> findByPublicIdAndUserPublicId(final UUID publicId, final UUID userPublicId);
 
-    void deleteByPublicId(final UUID publicId);
+    void deleteByPublicIdAndUserPublicId(final UUID publicId, final UUID userPublicId);
 
     @Query("SELECT a FROM PriceAlertEntity a JOIN FETCH a.user WHERE a.product.id = :productId AND a.active = true AND a.targetPrice >= :newPrice")
     List<PriceAlertEntity> findActiveAlertsForProduct(final Long productId, final BigDecimal newPrice);

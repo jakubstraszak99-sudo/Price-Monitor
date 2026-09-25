@@ -29,7 +29,8 @@ public record AppProperties(
 
     public record Cookie(
             String accessToken,
-            String refreshToken
+            String refreshToken,
+            boolean secure
     ) {}
 
 }

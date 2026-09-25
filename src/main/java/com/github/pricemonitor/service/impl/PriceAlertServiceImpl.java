@@ -71,8 +71,8 @@ public class PriceAlertServiceImpl implements PriceAlertService {
 
     @Override
     @Transactional
-    public PriceAlert updatePriceAlert(final UUID alertPublicId, final UpdatePriceAlertRequest request) {
-        final PriceAlertEntity alert = this.priceAlertRepository.findByPublicId(alertPublicId)
+    public PriceAlert updatePriceAlert(final UUID alertPublicId, final UpdatePriceAlertRequest request, final UUID userPublicId) {
+        final PriceAlertEntity alert = this.priceAlertRepository.findByPublicIdAndUserPublicId(alertPublicId, userPublicId)
                 .orElseThrow(() -> new PmRuntimeException(E015));
 
         if (request.targetPrice() != null) {
@@ -88,8 +88,8 @@ public class PriceAlertServiceImpl implements PriceAlertService {
 
     @Override
     @Transactional
-    public void deletePriceAlert(final UUID alertPublicId) {
-        this.priceAlertRepository.deleteByPublicId(alertPublicId);
+    public void deletePriceAlert(final UUID alertPublicId, final UUID userPublicId) {
+        this.priceAlertRepository.deleteByPublicIdAndUserPublicId(alertPublicId, userPublicId);
     }
 
 }

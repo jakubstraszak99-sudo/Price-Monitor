@@ -22,8 +22,8 @@ public interface PriceAlertService {
                                   final String search,
                                   final UUID userPublicId);
 
-    PriceAlert updatePriceAlert(final UUID alertPublicId, final UpdatePriceAlertRequest request);
+    PriceAlert updatePriceAlert(final UUID alertPublicId, final UpdatePriceAlertRequest request, final UUID userPublicId);
 
-    void deletePriceAlert(final UUID alertPublicId);
+    void deletePriceAlert(final UUID alertPublicId, final UUID userPublicId);
 
 }

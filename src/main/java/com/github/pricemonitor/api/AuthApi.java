@@ -16,6 +16,11 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/v1/auth")
 public interface AuthApi {
 
+    @Operation(summary = "Initialize CSRF protection", description = "Sets the XSRF-TOKEN cookie used with the X-XSRF-TOKEN request header")
+    @ApiResponse(responseCode = "204", description = "CSRF cookie initialized")
+    @GetMapping("/csrf")
+    ResponseEntity<Void> csrf();
+
     @Operation(summary = "User registration", description = "Creates a new user account")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "User registered successfully"),

@@ -3,9 +3,9 @@ services:
     image: 'postgres:latest'
     container_name: postgres
     environment:
-      - 'POSTGRES_DB=pricemonitordb'
-      - 'POSTGRES_PASSWORD=password'
-      - 'POSTGRES_USER=user'
+      - 'POSTGRES_DB=${PM_DB_NAME:-pricemonitordb}'
+      - 'POSTGRES_PASSWORD=${PM_DB_PASSWORD:-password}'
+      - 'POSTGRES_USER=${PM_DB_USERNAME:-user}'
     ports:
       - '5432:5432'
     volumes:

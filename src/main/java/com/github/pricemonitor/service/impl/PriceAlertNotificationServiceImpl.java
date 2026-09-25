@@ -31,6 +31,7 @@ public class PriceAlertNotificationServiceImpl implements PriceAlertNotification
                 final EmailNotificationMessage event = new EmailNotificationMessage(email, product.getProductUrl());
                 this.eventPublisher.publish(ALERT_NOTIFICATION_TOPIC, email, event);
             }
+
             this.notificationService.notifyPriceDrop(alert.getUser(), product, newPrice);
             alert.setActive(false);
         });

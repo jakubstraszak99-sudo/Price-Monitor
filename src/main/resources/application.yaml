@@ -6,25 +6,28 @@ spring:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
     listener:
-      concurrency: 4
+      concurrency: ${PM_KAFKA_CONCURRENCY:4}
   mail:
-    host: smtp.gmail.com
-    port: 587
-    username: ${MAIL_USERNAME}
-    password: ${MAIL_PASSWORD}
+    host: ${PM_MAIL_HOST:smtp.gmail.com}
+    port: ${PM_MAIL_PORT:587}
+    username: ${PM_MAIL_USERNAME}
+    password: ${PM_MAIL_PASSWORD}
     protocol: smtp
-    auth: true
     properties:
       mail:
         smtp:
+          auth: true
+          connectiontimeout: 10000
+          timeout: 10000
+          writetimeout: 10000
           starttls:
             enable: true
+            required: true
 
 app:
   mail:
-    from: "Price Monitor <${MAIL_USERNAME}>"
+    from: "Price Monitor <${PM_MAIL_USERNAME}>"
   jwt:
-    secret: ${JWT_SECRET}
     verification-expiration-ms: 10800000
     access-expiration-ms: 1800000
     refresh-expiration-ms: 2592000000
@@ -37,3 +40,7 @@ app:
   cookie:
     access-token: accessToken
     refresh-token: refreshToken
+    secure: false
+
+server:
+  port: ${PM_SERVER_PORT:8080}

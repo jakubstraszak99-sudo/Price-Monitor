@@ -10,6 +10,9 @@ import com.github.pricemonitor.service.AuthService;
 import jakarta.annotation.Nullable;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.http.CacheControl;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -27,6 +30,17 @@ public class AuthResource implements AuthApi {
     private final AuthService authService;
     private final AppProperties appProperties;
     private final HttpServletRequest request;
+    private final HttpServletResponse response;
+    private final CookieCsrfTokenRepository csrfTokenRepository;
+
+    @Override
+    public ResponseEntity<Void> csrf() {
+        return ResponseEntity.noContent().cacheControl(CacheControl.noStore()).build();
+    }
+
+    private void rotateCsrfToken() {
+        this.csrfTokenRepository.saveToken(this.csrfTokenRepository.generateToken(this.request), this.request, this.response);
+    }
 
     @Override
     public ResponseEntity<Void> register(final UserRegisterRequest request) {
@@ -37,6 +51,7 @@ public class AuthResource implements AuthApi {
     @Override
     public ResponseEntity<Void> verify(final String token) {
         final AuthTokenSet authTokenSet = this.authService.verifyAccount(token);
+        this.rotateCsrfToken();
 
         return ResponseEntity.status(HttpStatus.OK)
                 .header(HttpHeaders.SET_COOKIE, this.buildAccessCookie(
@@ -53,6 +68,7 @@ public class AuthResource implements AuthApi {
     @Override
     public ResponseEntity<Void> login(final UserLoginRequest request) {
         final AuthTokenSet authTokenSet = this.authService.login(request.login(), request.password());
+        this.rotateCsrfToken();
 
         return ResponseEntity.status(HttpStatus.OK)
                 .header(HttpHeaders.SET_COOKIE, this.buildAccessCookie(
@@ -69,6 +85,7 @@ public class AuthResource implements AuthApi {
     @Override
     public ResponseEntity<Void> logout() {
         this.authService.logout(this.getRefreshToken());
+        this.rotateCsrfToken();
         return ResponseEntity.status(HttpStatus.NO_CONTENT)
                 .header(HttpHeaders.SET_COOKIE, this.buildAccessCookie("", 0).toString())
                 .header(HttpHeaders.SET_COOKIE, this.buildRefreshCookie("", 0).toString())
@@ -108,6 +125,7 @@ public class AuthResource implements AuthApi {
     private ResponseCookie buildCookie(final String name, final String value, final String path, final long maxAgeSeconds) {
         return ResponseCookie.from(name, value)
                 .httpOnly(true)
+                .secure(this.appProperties.cookie().secure())
                 .path(path)
                 .maxAge(maxAgeSeconds)
                 .sameSite("Strict")

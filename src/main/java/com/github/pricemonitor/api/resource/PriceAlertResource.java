@@ -39,14 +39,14 @@ public class PriceAlertResource implements PriceAlertApi {
     }
 
     @Override
-    public ResponseEntity<PriceAlert> updatePriceAlert(final UUID alertPublicId, final UpdatePriceAlertRequest request) {
-        final PriceAlert alert = this.priceAlertService.updatePriceAlert(alertPublicId, request);
+    public ResponseEntity<PriceAlert> updatePriceAlert(final UUID alertPublicId, final UpdatePriceAlertRequest request, final UUID userPublicId) {
+        final PriceAlert alert = this.priceAlertService.updatePriceAlert(alertPublicId, request, userPublicId);
         return ResponseEntity.status(HttpStatus.OK).body(alert);
     }
 
     @Override
-    public ResponseEntity<Void> deletePriceAlert(final UUID alertPublicId) {
-        this.priceAlertService.deletePriceAlert(alertPublicId);
+    public ResponseEntity<Void> deletePriceAlert(final UUID alertPublicId, final UUID userPublicId) {
+        this.priceAlertService.deletePriceAlert(alertPublicId, userPublicId);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 

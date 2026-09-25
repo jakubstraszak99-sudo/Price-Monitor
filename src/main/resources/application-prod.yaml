@@ -1,0 +1,54 @@
+spring:
+  main:
+    banner-mode: off
+  docker:
+    compose:
+      enabled: false
+  datasource:
+    url: ${PM_DB_URL}
+    username: ${PM_DB_USERNAME}
+    password: ${PM_DB_PASSWORD}
+    hikari:
+      maximum-pool-size: ${PM_DB_POOL_SIZE:10}
+      connection-timeout: 30000
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+  kafka:
+    bootstrap-servers: ${PM_KAFKA_BOOTSTRAP_SERVERS}
+  data:
+    redis:
+      host: ${PM_REDIS_HOST}
+      port: ${PM_REDIS_PORT:6379}
+      password: ${PM_REDIS_PASSWORD}
+      ssl:
+        enabled: ${PM_REDIS_SSL:false}
+      connect-timeout: 5s
+      timeout: 5s
+
+server:
+  address: ${PM_SERVER_ADDRESS:127.0.0.1}
+  shutdown: graceful
+
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
+
+logging:
+  level:
+    root: INFO
+    org.apache.kafka: ERROR
+    org.hibernate.SQL: ERROR
+    org.springframework.security: ERROR
+    com.github.pricemonitor: INFO
+
+app:
+  jwt:
+    secret: ${PM_JWT_SECRET}
+  client-url: ${PM_CLIENT_URL}
+  cookie:
+    secure: true

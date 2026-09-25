@@ -14,7 +14,7 @@ class JwtAuthenticationFilterSpec extends Specification {
     def tokenProvider = Mock(TokenProvider)
     def filterChain = Mock(FilterChain)
     def accessToken = "accessToken"
-    def appProperties = new AppProperties(null, null, null, new AppProperties.Cookie(this.accessToken, null), null)
+    def appProperties = new AppProperties(null, null, null, new AppProperties.Cookie(this.accessToken, null, false), null)
 
     @Subject
     def filter = new JwtAuthenticationFilter(this.tokenProvider, this.appProperties)

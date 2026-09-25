@@ -25,6 +25,8 @@ class PriceAlertServiceSpec extends Specification {
     def productMapper = new ProductMapperImpl()
     def priceAlertMapper = new PriceAlertMapperImpl(this.productMapper)
 
+    def ownerPublicId = UUID.randomUUID()
+
     @Subject
     def service = new PriceAlertServiceImpl(
             this.priceAlertRepository,
@@ -176,10 +178,10 @@ class PriceAlertServiceSpec extends Specification {
             def request = new UpdatePriceAlertRequest(!initialState, null)
 
         when:
-            def result = this.service.updatePriceAlert(alertPublicId, request)
+            def result = this.service.updatePriceAlert(alertPublicId, request, this.ownerPublicId)
 
         then:
-            1 * this.priceAlertRepository.findByPublicId(alertPublicId) >> Optional.of(alertEntity)
+            1 * this.priceAlertRepository.findByPublicIdAndUserPublicId(alertPublicId, this.ownerPublicId) >> Optional.of(alertEntity)
             alertEntity.getActive() == expectedState
             result != null
             result.active() == expectedState
@@ -199,22 +201,22 @@ class PriceAlertServiceSpec extends Specification {
             def request = new UpdatePriceAlertRequest(null, newPrice)
 
         when:
-            this.service.updatePriceAlert(alertPublicId, request)
+            this.service.updatePriceAlert(alertPublicId, request, this.ownerPublicId)
 
         then:
-            1 * this.priceAlertRepository.findByPublicId(alertPublicId) >> Optional.of(alertEntity)
+            1 * this.priceAlertRepository.findByPublicIdAndUserPublicId(alertPublicId, this.ownerPublicId) >> Optional.of(alertEntity)
             alertEntity.getTargetPrice() == newPrice
     }
 
-    def "Should throw E015 when toggling status of non-existent price alert"() {
+    def "Should throw E015 when updating a missing alert or an alert owned by another user"() {
         given:
             def alertPublicId = UUID.randomUUID()
 
         when:
-            this.service.updatePriceAlert(alertPublicId, null)
+            this.service.updatePriceAlert(alertPublicId, null, this.ownerPublicId)
 
         then:
-            1 * this.priceAlertRepository.findByPublicId(alertPublicId) >> Optional.empty()
+            1 * this.priceAlertRepository.findByPublicIdAndUserPublicId(alertPublicId, this.ownerPublicId) >> Optional.empty()
             def e = thrown(PmRuntimeException)
             e.getCode() == ExceptionCode.E015
     }
@@ -224,9 +226,9 @@ class PriceAlertServiceSpec extends Specification {
             def alertPublicId = UUID.randomUUID()
 
         when:
-            this.service.deletePriceAlert(alertPublicId)
+            this.service.deletePriceAlert(alertPublicId, this.ownerPublicId)
 
         then:
-            1 * this.priceAlertRepository.deleteByPublicId(alertPublicId)
+            1 * this.priceAlertRepository.deleteByPublicIdAndUserPublicId(alertPublicId, this.ownerPublicId)
     }
 }

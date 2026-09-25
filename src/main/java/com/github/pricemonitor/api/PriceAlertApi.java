@@ -92,13 +92,15 @@ public interface PriceAlertApi {
     @PatchMapping("/{publicId}")
     ResponseEntity<PriceAlert> updatePriceAlert(
             @PathVariable("publicId") final UUID alertPublicId,
-            @RequestBody @Valid final UpdatePriceAlertRequest request
+            @RequestBody @Valid final UpdatePriceAlertRequest request,
+            @AuthenticationPrincipal final UUID userPublicId
     );
 
 
     @Operation(summary = "Delete price alert", description = "Deletes price alert permanently")
     @ApiResponse(responseCode = "204", description = "Price alert deleted successfully")
     @DeleteMapping("/{publicId}/delete")
-    ResponseEntity<Void> deletePriceAlert(@PathVariable("publicId") final UUID alertPublicId);
+    ResponseEntity<Void> deletePriceAlert(@PathVariable("publicId") final UUID alertPublicId,
+                                        @AuthenticationPrincipal final UUID userPublicId);
 
 }
