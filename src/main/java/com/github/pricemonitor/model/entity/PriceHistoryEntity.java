@@ -18,7 +18,7 @@ import java.math.BigDecimal;
 @Table(name = "price_history")
 public class PriceHistoryEntity extends BaseEntity {
 
-    @Column(nullable = false)
+    @Column(nullable = false, precision = 19, scale = 2)
     private BigDecimal recordedPrice;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)

@@ -4,11 +4,15 @@ spring:
     username: ${PM_DB_USERNAME:user}
     password: ${PM_DB_PASSWORD:password}
   jpa:
+    hibernate:
+      ddl-auto: update
     properties:
       hibernate:
         format_sql: false
   kafka:
     bootstrap-servers: ${PM_KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+  flyway:
+    enabled: false
   data:
     redis:
       host: ${PM_REDIS_HOST:localhost}

@@ -26,15 +26,19 @@ class EmpikScraperSpec extends Specification {
         expect:
             this.scraper.extractName(doc) == "LEGO test"
     }
+
     def "Should extract product price using dedicated selector"() {
         given:
             def html = """
-                    <html>
-                        <body>
-                            <span data-ta="price">1242,99 zł</span>
-                        </body>
-                    </html>
-                """
+                        <html>
+                            <body>
+                                <span data-ta="price">1389,99 zł</span>
+                                <div data-ta-section="priceMainContainer">
+                                    <span data-ta="price">1242,99 zł</span>
+                                </div>
+                            </body>
+                        </html>
+                    """
             def doc = Jsoup.parse(html)
 
         expect:

@@ -30,7 +30,7 @@ public class ProductEntity extends BaseEntity {
     @Column(length = 1000)
     private String imageUrl;
 
-    @Column(nullable = false)
+    @Column(nullable = false, precision = 19, scale = 2)
     private BigDecimal currentPrice;
 
     @Column(length = 3)

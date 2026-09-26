@@ -3,8 +3,6 @@ spring:
     driver-class-name: org.postgresql.Driver
   jpa:
     show-sql: false
-    hibernate:
-      ddl-auto: update
   kafka:
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer

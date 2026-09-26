@@ -28,6 +28,7 @@
         <gmavenplus.version>5.1.0</gmavenplus.version>
         <spockframework.version>2.4-groovy-5.0</spockframework.version>
         <lombok.mapstruct.binding.version>0.2.0</lombok.mapstruct.binding.version>
+        <flyway.version>13.7.0</flyway.version>
     </properties>
 
     <dependencies>
@@ -62,6 +63,10 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-websocket</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-flyway</artifactId>
         </dependency>
 
         <dependency>
@@ -178,6 +183,12 @@
             <artifactId>spock-spring</artifactId>
             <version>${spockframework.version}</version>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-database-postgresql</artifactId>
+            <version>${flyway.version}</version>
+            <scope>compile</scope>
         </dependency>
     </dependencies>
 

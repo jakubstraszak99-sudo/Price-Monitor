@@ -12,9 +12,16 @@ spring:
       maximum-pool-size: ${PM_DB_POOL_SIZE:10}
       connection-timeout: 30000
   jpa:
+    hibernate:
+      ddl-auto: validate
     open-in-view: false
   kafka:
     bootstrap-servers: ${PM_KAFKA_BOOTSTRAP_SERVERS}
+  flyway:
+    enabled: true
+    baseline-on-migrate: false
+    validate-on-migrate: true
+    clean-disabled: true
   data:
     redis:
       host: ${PM_REDIS_HOST}

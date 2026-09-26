@@ -15,7 +15,7 @@ public class EmpikScraper extends ShopScraper {
 
     private static final String EMPIK_DOMAIN = "empik.com";
     private static final String PRODUCT_NAME_SELECTOR = "h1[data-ta='title']";
-    private static final String PRODUCT_PRICE_SELECTOR = "span[data-ta='price']";
+    private static final String PRODUCT_PRICE_SELECTOR = "div[data-ta-section='priceMainContainer'] span[data-ta='price']";
 
     public EmpikScraper(final WebDriverConfig webDriverConfig) {
         super(webDriverConfig);

@@ -35,7 +35,7 @@ public class PriceAlertEntity extends BaseEntity {
     @OnDelete(action = OnDeleteAction.CASCADE)
     private ProductEntity product;
 
-    @Column(nullable = false)
+    @Column(nullable = false, precision = 19, scale = 2)
     private BigDecimal targetPrice;
 
     @Column(nullable = false)

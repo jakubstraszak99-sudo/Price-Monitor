@@ -45,7 +45,7 @@ public class NotificationEntity extends BaseEntity {
     @Builder.Default
     private boolean read = false;
 
-    @Column
+    @Column(precision = 19, scale = 2)
     private BigDecimal triggerPrice;
 
 }
