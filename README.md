@@ -75,8 +75,6 @@ Backend domyślnie działa pod `http://localhost:8080`. Następnie uruchom front
 
 ## Konfiguracja
 
-Podstawowe ustawienia znajdują się w [application.yaml](src/main/resources/application.yaml), a połączenia lokalne i adres frontendu w [application-dev.yaml](src/main/resources/application-dev.yaml). Profil wybiera `PM_PROFILE`: domyślnie `dev`, na serwerze ustaw `prod`. Konfiguracja produkcyjna znajduje się w [application-prod.yaml](src/main/resources/application-prod.yaml).
-
 | Ustawienie | Znaczenie / domyślna wartość |
 | --- | --- |
 | `PM_JWT_SECRET` | Wymagany klucz do podpisywania JWT |
@@ -176,7 +174,6 @@ Powyższe polecenia są dla Bash. Sam Spring nie wczytuje `.env.prod`, a plik je
 
 | Zmienna | Znaczenie w profilu produkcyjnym |
 | --- | --- |
-| `PM_PROFILE=prod` | Włącza profil produkcyjny |
 | `PM_CLIENT_URL` | Wymagany publiczny adres HTTPS frontendu |
 | `PM_JWT_SECRET` | Wymagany trwały klucz Base64, minimum 32 bajty po zdekodowaniu |
 | `PM_DB_URL`, `PM_DB_USERNAME`, `PM_DB_PASSWORD` | Wymagane dane PostgreSQL; parametry TLS można dodać do URL JDBC |

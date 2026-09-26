@@ -4,9 +4,6 @@ spring:
     username: ${PM_DB_USERNAME:user}
     password: ${PM_DB_PASSWORD:password}
   jpa:
-    hibernate:
-      ddl-auto: update
-    show-sql: false
     properties:
       hibernate:
         format_sql: false
