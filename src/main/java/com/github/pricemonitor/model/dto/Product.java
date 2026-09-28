@@ -2,7 +2,7 @@ package com.github.pricemonitor.model.dto;
 
 import java.math.BigDecimal;
 import java.net.URI;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.Currency;
 
 public record Product(
@@ -11,7 +11,7 @@ public record Product(
         URI imageUrl,
         Currency currency,
         BigDecimal currentPrice,
-        LocalDateTime lastUpdated,
+        Instant lastUpdated,
         String shop,
         URI faviconUrl,
         Boolean available

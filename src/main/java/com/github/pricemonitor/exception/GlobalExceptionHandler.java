@@ -6,7 +6,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -16,7 +16,7 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(new ErrorResponse(
                 "INVALID_REQUEST",
                 "Invalid request body",
-                LocalDateTime.now()
+                Instant.now()
         ));
     }
 
@@ -26,7 +26,7 @@ public class GlobalExceptionHandler {
         final ErrorResponse response = new ErrorResponse(
                 code.name(),
                 code.getMessage(),
-                LocalDateTime.now()
+                Instant.now()
         );
 
         return ResponseEntity.status(code.getStatus()).body(response);
@@ -37,7 +37,7 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(500).body(new ErrorResponse(
                 "INTERNAL_ERROR",
                 "An unexpected error occured",
-                LocalDateTime.now()
+                Instant.now()
         ));
     }
 

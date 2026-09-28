@@ -10,6 +10,7 @@ import spock.lang.Specification
 import spock.lang.Subject
 
 import java.time.LocalDateTime
+import java.time.ZoneOffset
 
 class PriceHistoryServiceSpec extends Specification {
 
@@ -56,15 +57,15 @@ class PriceHistoryServiceSpec extends Specification {
             def productUrl = "https://example.com/product"
             def item1 = PriceHistoryEntity.builder()
                     .recordedPrice(new BigDecimal("12.00"))
-                    .createdAt(LocalDateTime.of(2026, 12, 1, 10, 0))
+                    .createdAt(LocalDateTime.of(2026, 12, 1, 10, 0).toInstant(ZoneOffset.UTC))
                     .build()
             def item2 = PriceHistoryEntity.builder()
                     .recordedPrice(new BigDecimal("10.00"))
-                    .createdAt(LocalDateTime.of(2026, 12, 3, 10, 0))
+                    .createdAt(LocalDateTime.of(2026, 12, 3, 10, 0).toInstant(ZoneOffset.UTC))
                     .build()
             def item3 = PriceHistoryEntity.builder()
                     .recordedPrice(new BigDecimal("8.00"))
-                    .createdAt(LocalDateTime.of(2026, 12, 2, 10, 0))
+                    .createdAt(LocalDateTime.of(2026, 12, 2, 10, 0).toInstant(ZoneOffset.UTC))
                     .build()
 
             this.priceHistoryRepository.findByProductProductUrl(productUrl) >> List.of(item3, item1, item2)
@@ -74,9 +75,9 @@ class PriceHistoryServiceSpec extends Specification {
 
         then:
             result == List.of(
-                    new PriceHistory(new BigDecimal("12.00"), LocalDateTime.of(2026, 12, 1, 10, 0)),
-                    new PriceHistory(new BigDecimal("8.00"), LocalDateTime.of(2026, 12, 2, 10, 0)),
-                    new PriceHistory(new BigDecimal("10.00"), LocalDateTime.of(2026, 12, 3, 10, 0))
+                    new PriceHistory(new BigDecimal("12.00"), LocalDateTime.of(2026, 12, 1, 10, 0).toInstant(ZoneOffset.UTC)),
+                    new PriceHistory(new BigDecimal("8.00"), LocalDateTime.of(2026, 12, 2, 10, 0).toInstant(ZoneOffset.UTC)),
+                    new PriceHistory(new BigDecimal("10.00"), LocalDateTime.of(2026, 12, 3, 10, 0).toInstant(ZoneOffset.UTC))
             )
     }
 

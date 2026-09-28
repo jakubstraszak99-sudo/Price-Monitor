@@ -48,6 +48,7 @@ logging:
     org.apache.kafka: ERROR
     org.hibernate.SQL: ERROR
     org.springframework.security: ERROR
+    org.openqa.selenium.devtools.CdpVersionFinder: ERROR
     com.github.pricemonitor: INFO
 
 app:

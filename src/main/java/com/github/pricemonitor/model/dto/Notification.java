@@ -3,7 +3,7 @@ package com.github.pricemonitor.model.dto;
 import com.github.pricemonitor.model.helper.NotificationType;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.UUID;
 
 public record Notification(
@@ -11,7 +11,7 @@ public record Notification(
         NotificationType type,
         Product product,
         String productName,
-        boolean read,
+        Boolean read,
         BigDecimal triggerPrice,
-        LocalDateTime createdAt
+        Instant createdAt
 ) {}

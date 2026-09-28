@@ -6,7 +6,7 @@ import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Currency;
 import java.util.List;
@@ -38,7 +38,7 @@ public class ProductEntity extends BaseEntity {
 
     @UpdateTimestamp
     @Column(nullable = false)
-    private LocalDateTime lastUpdated;
+    private Instant lastUpdated;
 
     @Column
     private String shop;

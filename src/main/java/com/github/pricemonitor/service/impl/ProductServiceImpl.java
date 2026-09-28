@@ -32,6 +32,7 @@ import java.util.Optional;
 
 import static com.github.pricemonitor.config.CacheConfig.PRICE_HISTORY;
 import static com.github.pricemonitor.exception.ExceptionCode.E011;
+import static com.github.pricemonitor.exception.ExceptionCode.E016;
 import static com.github.pricemonitor.kafka.KafkaConstants.SCRAPER_REPLY_TOPIC;
 import static com.github.pricemonitor.kafka.KafkaConstants.SCRAPER_REQUEST_TOPIC;
 
@@ -58,6 +59,11 @@ public class ProductServiceImpl implements ProductService {
         return this.findProduct(url)
                 .map(product -> {
                     log.debug("Product found in database: {}", url);
+
+                    if (Boolean.FALSE.equals(product.getAvailable())) {
+                        throw new PmRuntimeException(E016);
+                    }
+
                     return this.productMapper.mapToScrapedProduct(product);
                 }).orElseGet(() -> this.fetchFromUrl(url));
     }
