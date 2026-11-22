@@ -38,10 +38,6 @@ public class AuthResource implements AuthApi {
         return ResponseEntity.noContent().cacheControl(CacheControl.noStore()).build();
     }
 
-    private void rotateCsrfToken() {
-        this.csrfTokenRepository.saveToken(this.csrfTokenRepository.generateToken(this.request), this.request, this.response);
-    }
-
     @Override
     public ResponseEntity<Void> register(final UserRegisterRequest request) {
         this.authService.registerUser(request.username(), request.email(), request.password());
@@ -112,6 +108,10 @@ public class AuthResource implements AuthApi {
                 .map(Cookie::getValue)
                 .findFirst()
                 .orElse(null);
+    }
+
+    private void rotateCsrfToken() {
+        this.csrfTokenRepository.saveToken(this.csrfTokenRepository.generateToken(this.request), this.request, this.response);
     }
 
     private ResponseCookie buildAccessCookie(final String value, final long maxAgeSeconds) {
